@@ -1,0 +1,10 @@
+_old_
+
+flags-last-build
+libs-last-build
+*.o
+*.d
+*.s
+
+sft-simp-draw
+

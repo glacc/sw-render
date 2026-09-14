@@ -1,0 +1,24 @@
+Completion:
+  HeaderInsertion: Never
+
+CompileFlags:
+  Add:
+    - -DAPP_NAME="osu-api-playground"
+    - -I/usr/include/freetype2
+    - -I/usr/include/libpng16
+
+---
+
+If:
+  PathMatch: [".*\\.c"]
+CompileFlags:
+  Add:
+    - -std=c23
+
+---
+
+If:
+  PathMatch: [".*\\.cpp", ".*\\.hpp", ".*\\.h"]
+CompileFlags:
+  Add:
+    - -std=c++23
