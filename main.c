@@ -1,4 +1,5 @@
 #include <stdint.h>
+#include <math.h>
 
 #define __LOG_FILE__ "main.c"
 #include "MacroLog.h"
@@ -10,11 +11,47 @@
 
 static const char *fontpath = "./MiSans_Regular.ttf";
 
+const SWRenderColor color_transition_table[] =
+{
+    { 0xFF, 0x00, 0x00, 0xFF },
+    { 0xFF, 0xFF, 0x00, 0xFF },
+    { 0x00, 0xFF, 0x00, 0xFF },
+    { 0x00, 0xFF, 0xFF, 0xFF },
+    { 0x00, 0x00, 0xFF, 0xFF },
+    { 0xFF, 0x00, 0xFF, 0xFF },
+    { 0xFF, 0x00, 0x00, 0xFF },
+};
+const int color_transition_table_length = (sizeof(color_transition_table) / sizeof(color_transition_table[0]));
+
+SWRenderColor GetTransitionColor(float alpha, float progress)
+{
+    float progress_total = (float)(color_transition_table_length - 1) * progress;
+    float progress_index = progress_total - floorf(progress_total);
+
+    int index = (int)progress_total;
+    if (index < 0)
+        index = 0;
+    if (index >= color_transition_table_length - 1)
+        index = color_transition_table_length - 2;
+
+    const SWRenderColor *color_curr = &color_transition_table[index];
+    const SWRenderColor *color_next = &color_transition_table[index + 1];
+
+    float r = (float)color_curr->r + ((float)(color_next->r - color_curr->r) * progress_index);
+    float g = (float)color_curr->g + ((float)(color_next->g - color_curr->g) * progress_index);
+    float b = (float)color_curr->b + ((float)(color_next->b - color_curr->b) * progress_index);
+    float a = (float)color_curr->a + ((float)(color_next->a - color_curr->a) * progress_index);
+    a *= alpha;
+
+    return (SWRenderColor){ (uint8_t)r, (uint8_t)g, (uint8_t)b, (uint8_t)a };
+}
+
 int TestSWRender(void)
 {
     int ret;
 
     const int size = 512;
+    const int half_size = size / 2;
     const int color_size = 192;
 
     FTEssentials_State ft_state;
@@ -44,7 +81,6 @@ int TestSWRender(void)
     }
 
     // output
-
     // alpha background
     SWRender_FillRect(&buffer_output, (SWRenderBoundI){ 0, 0, size - 1, size - 1 }, (SWRenderColor){ 0x00, 0x00, 0x00, 0x00 }, true);
 
@@ -73,8 +109,25 @@ int TestSWRender(void)
 
     FTRender_RenderStrWithAlign(&ft_state, &buffer_output, INT_TO_F26DOT6(420), INT_TO_F26DOT6(420), "喵！", -1, -1, (SWRenderColor){ 0xFF, 0xFF, 0xFF, 0xFF });
 
-    // scaled
+    // lines
+    const int line_count = 24;
+    const float line_len = 192.0F;
+    const float line_thickness = 10.0F;
 
+    const float angle_offset = -M_PI_2f;
+
+    for (int i = 0; i < line_count; i++)
+    {
+        float progress = (float)i * (1.0F / (float)line_count);
+        float angle = (progress * 2.0F * M_PI) + angle_offset;
+
+        int x_dst = (int)(half_size + (cosf(angle) * line_len));
+        int y_dst = (int)(half_size + (sinf(angle) * line_len));
+
+        SWRender_Line(&buffer_output, &(SWRenderBoundF){ half_size, half_size, x_dst, y_dst }, GetTransitionColor((0x80 / 255.0F), progress), line_thickness);
+    }
+
+    // scaled
     // large
     SWRender_CopyBufferScaled(&buffer_output, NULL, &buffer_scaled, &(SWRenderBoundI){ 0, 0, (size * 2) - 1, (size * 2) - 1});
 

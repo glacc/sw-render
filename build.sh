@@ -35,7 +35,7 @@ PKG_CONFIG_LIBS=$(pkg-config --libs "${LIBS[@]}")
 # default
 FLAGS_FINAL=("${FLAGS_DEFAULT[@]}")
 
-FLAGS_FINALSTEP=()
+FLAGS_LINKING=(-lm)
 
 # file to store last build flags and libs linked
 FLAGS_LAST_BUILD_FILENAME="flags-last-build"
@@ -116,7 +116,7 @@ for ARG in "${@:1}"; do
         ;;
         # verbose
         '--verbose')
-            FLAGS_FINALSTEP+=("--verbose")
+            FLAGS_LINKING+=(--verbose)
         ;;
         *)
             echo "unknown argument '$ARG'"
@@ -328,7 +328,7 @@ cd "$SWD"
 echo "link: $SWD"
 
 if [ $TOTAL_COMPILE_COUNT -ne 0 ] || [ $NEED_RELINK -ne 0 ] ; then
-    CMD_LNK=(g++ "${OBJ_PATH[@]}" "${PATH_ADDITIONAL_LNK[@]}" $PKG_CONFIG_INCLUDE $PKG_CONFIG_LIBS "${FLAGS_FINALSTEP[@]}" -o "$OUTPUT")
+    CMD_LNK=(g++ "${OBJ_PATH[@]}" "${PATH_ADDITIONAL_LNK[@]}" $PKG_CONFIG_INCLUDE $PKG_CONFIG_LIBS "${FLAGS_LINKING[@]}" -o "$OUTPUT")
     
     echo "${CMD_LNK[@]}"
     if "${CMD_LNK[@]}"; then
