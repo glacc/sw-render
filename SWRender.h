@@ -5,11 +5,15 @@
 
 #define SWRENDER_ALIGNMENT 4
 
-#define SWRENDER_LINE_ANTIALIAS_MULT 8
-#define SWRENDER_LINE_ANTIALIAS_DIST 1.0F
+#define SWRENDER_ANTIALIAS_MULT 8
+#define SWRENDER_ANTIALIAS_DIST 0.8F
+
+#define SWRENDER_ANTIALIAS_DIV_MUL (1.0F / (SWRENDER_ANTIALIAS_MULT * SWRENDER_ANTIALIAS_MULT))
 
 #define SWRENDER_LINE_BLOCK_SIZE_MIN 8
 #define SWRENDER_LINE_BLOCK_SIZE_MAX 512
+
+#define SWRENDER_LINE_SAFEZONE_SIZE 0.5F
 
 #define SWRENDER_EPSILON FLT_EPSILON
 
@@ -60,6 +64,9 @@ extern "C"
 {
 #endif
 
+    extern SWRenderColor *SWRender_GetPointerByPosition(const SWRenderBuffer *buffer, int x, int y);
+    extern SWRenderColor *SWRendet_GetPointerNextLine(const SWRenderBuffer *buffer, SWRenderColor *ptr);
+
     extern void SWRender_CheckAndSwapBoundCornersInt(SWRenderBoundI *bounds);
     extern void SWRender_CheckAndSwapBoundCornersFloat(SWRenderBoundF *bounds);
 
@@ -75,6 +82,9 @@ extern "C"
     extern void SWRender_BlendPixel(SWRenderBuffer *buffer, SWRenderVec2I pos, SWRenderColor color);
 
     extern void SWRender_FillRect(SWRenderBuffer *buffer, const SWRenderBoundI pos, SWRenderColor color, bool overwrite);
+    extern void SWRender_FillCircle(SWRenderBuffer *buffer, SWRenderVec2F center, float radius, const SWRenderBoundI *crop, SWRenderColor color);
+    extern void SWRender_FillRing(SWRenderBuffer *buffer, SWRenderVec2F center, float radius, float thickness, const SWRenderBoundI *crop, SWRenderColor color);
+    extern void SWRender_FillRectRounded(SWRenderBuffer *buffer, const SWRenderBoundF pos, float corner_radius, SWRenderColor color);
 
     extern void SWRender_Line(SWRenderBuffer *buffer, const SWRenderBoundF *line_pos, SWRenderColor color, float thickness);
 

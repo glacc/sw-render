@@ -111,20 +111,33 @@ int TestSWRender(void)
 
     // lines
     const int line_count = 24;
-    const float line_len = 192.0F;
-    const float line_thickness = 10.0F;
+    const float line_start_dist = 8.0F;
+    const float line_end_dist = 160.0F;
+    const float line_thickness = 5.0F;
+    const float bg_ring_thickness = 5.0F;
+    const float bg_radius = line_end_dist + bg_ring_thickness + line_thickness + line_thickness;
+    const float bg_rect_half_size = bg_radius + bg_ring_thickness + bg_ring_thickness;
+    const float bg_rect_pos_ul = half_size - bg_rect_half_size;
+    const float bg_rect_pos_dr = half_size + bg_rect_half_size;
+    const float bg_rect_corner_radius = 10.0F;
 
     const float angle_offset = -M_PI_2f;
+
+    SWRender_FillRectRounded(&buffer_output, (SWRenderBoundF){ bg_rect_pos_ul, bg_rect_pos_ul, bg_rect_pos_dr, bg_rect_pos_dr }, bg_rect_corner_radius, (SWRenderColor){ 0x00, 0x00, 0x00, 0x40 });
+    SWRender_FillCircle(&buffer_output, (SWRenderVec2F){ half_size , half_size }, bg_radius, NULL, (SWRenderColor){ 0x00, 0x00, 0x00, 0x40 });
+    SWRender_FillRing(&buffer_output, (SWRenderVec2F){ half_size, half_size }, bg_radius, bg_ring_thickness, NULL, (SWRenderColor){ 0x00, 0x00, 0x00, 0x40 });
 
     for (int i = 0; i < line_count; i++)
     {
         float progress = (float)i * (1.0F / (float)line_count);
         float angle = (progress * 2.0F * M_PI) + angle_offset;
 
-        int x_dst = (int)(half_size + (cosf(angle) * line_len));
-        int y_dst = (int)(half_size + (sinf(angle) * line_len));
+        float x1 = half_size + (cosf(angle) * line_start_dist);
+        float y1 = half_size + (sinf(angle) * line_start_dist);
+        float x2 = half_size + (cosf(angle) * line_end_dist);
+        float y2 = half_size + (sinf(angle) * line_end_dist);
 
-        SWRender_Line(&buffer_output, &(SWRenderBoundF){ half_size, half_size, x_dst, y_dst }, GetTransitionColor((0x80 / 255.0F), progress), line_thickness);
+        SWRender_Line(&buffer_output, &(SWRenderBoundF){ x1, y1, x2, y2 }, GetTransitionColor((0x80 / 255.0F), progress), line_thickness);
     }
 
     // scaled
