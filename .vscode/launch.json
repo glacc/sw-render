@@ -4,7 +4,7 @@
         "name": "debug",
         "type": "cppdbg",
         "request": "launch",
-        "program": "${workspaceFolder}/sft-simp-draw",
+        "program": "${workspaceFolder}/sw-render-test",
         "args": [],
         "stopAtEntry": false,
         "cwd": "${workspaceFolder}",
