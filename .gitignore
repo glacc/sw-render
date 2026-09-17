@@ -6,7 +6,7 @@ libs-last-build
 *.d
 *.s
 
-sft-simp-draw
+sw-render-test
 
 test-sw-render.png
 test-sw-render-scaled.png
