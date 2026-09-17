@@ -7,13 +7,13 @@ SWD="$(dirname "$(realpath "$0")")"
 OUTPUT="sft-simp-draw"
 
 # settings - directories
-DIRS=("./")
+DIRS=("./" "./SWRender")
 
 # settings - path of static libraries
 PATH_ADDITIONAL_LNK=()
 
 # settings - flags all
-FLAGS_ALL=(-march=x86-64-v3 -pthread -DAPP_NAME="$OUTPUT")
+FLAGS_ALL=(-march=x86-64-v3 -pthread -DAPP_NAME="$OUTPUT" -I$SWD/CommonInclude)
 
 # settings - flags by option
 FLAGS_DEBUG=("${FLAGS_ALL[@]}" -DDEBUG -O0 -g)
@@ -103,6 +103,7 @@ for ARG in "${@:1}"; do
                 fi
             done
 
+            cd "$SWD"
             if [ -e "./$FLAGS_LAST_BUILD_FILENAME" ]; then
                 rm "./$FLAGS_LAST_BUILD_FILENAME"
             fi

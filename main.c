@@ -4,10 +4,10 @@
 #define __LOG_FILE__ "main.c"
 #include "MacroLog.h"
 
-#include "SWRender.h"
-#include "SWRenderExtImage.h"
-#include "FTEssentials.h"
-#include "FTRender.h"
+#include "SWRender/SWRender.h"
+#include "SWRender/SWRenderExtImage.h"
+#include "SWRender/FTEssentials.h"
+#include "SWRender/FTRender.h"
 
 static const char *fontpath = "./MiSans_Regular.ttf";
 
