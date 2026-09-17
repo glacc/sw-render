@@ -27,8 +27,11 @@
 #include FT_FREETYPE_H
 
 #define INT_TO_F26DOT6(x)       ((x) << 6)
-#define FLOAT_TO_F26DOT6(x)     ((FT_F26Dot6)((x) * 6.0F))
-#define DOUBLE_TO_F26DOT6(x)    ((FT_F26Dot6)((x) * 6.0))
+#define FLOAT_TO_F26DOT6(x)     ((FT_F26Dot6)((x) * 64.0F))
+#define DOUBLE_TO_F26DOT6(x)    ((FT_F26Dot6)((x) * 64.0))
+#define F26DOT6_TO_INT(x)       (((x) + (1 << 5)) >> 6)
+#define F26DOT6_TO_FLOAT(x)     ((float)(x) / 64.0F)
+#define F26DOT6_TO_DOUBLE(x)    ((double)(x) / 64.0)
 
 typedef struct FTEssentials_StateStruct
 {

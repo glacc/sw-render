@@ -228,7 +228,7 @@ void FTEssentials_GetStrBounds(FTEssentials_State *state, const char *str, FT_F2
         FT_F26Dot6 this_glyph_x1, this_glyph_y1, this_glyph_x2, this_glyph_y2;
         this_glyph_x1 = glyph_x + glyph_metrics->horiBearingX;
         this_glyph_y1 = glyph_y - glyph_metrics->horiBearingY;
-        this_glyph_y2 = this_glyph_y1 + size_y;
+        this_glyph_y2 = this_glyph_y1 - face->descender;
         if (!fixed_advance)
         {
             this_glyph_x2 = this_glyph_x1 + glyph_metrics->width;
