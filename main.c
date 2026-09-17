@@ -105,7 +105,7 @@ int TestSWRender(void)
     SWRender_FillRect(&buffer_output, (SWRenderBoundI){ 0, 0, size - 1, size - 1 }, (SWRenderColor){ 0x00, 0x00, 0x00, 0x00 }, true);
 
     // blit image?
-    SWRender_LoadImageToBuffer("./test_image.jpg", &buffer_image);
+    SWRender_LoadImageFromFileToBuffer("./test_image.jpg", &buffer_image);
     SWRender_CopyBuffer(&buffer_image, &(SWRenderBoundI){ 0, 0, buffer_image.w * 2 / 3, buffer_image.h }, &buffer_output, (SWRenderVec2I){ (-buffer_image.w / 4), 0 });
 
     // white background

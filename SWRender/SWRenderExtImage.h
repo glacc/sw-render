@@ -24,12 +24,15 @@
 
 #include <libavcodec/avcodec.h>
 
+#define SWRENDER_IMG_AVIO_BUF_SIZE 4096
+
 #ifdef __cplusplus
 extern "C"
 {
 #endif
 
-    extern int SWRender_LoadImageToBuffer(const char *filepath, SWRenderBuffer *buffer);
+    extern int SWRender_LoadImageFromFileToBuffer(const char *filepath, SWRenderBuffer *buffer);
+    extern int SWRender_LoadImageFromMemoryToBuffer(const uint8_t *src, const size_t size, SWRenderBuffer *buffer);
     extern int SWRender_SaveImageFromBuffer(SWRenderBuffer *buffer, const char *filepath, enum AVCodecID codec_id);
 
 #ifdef __cplusplus

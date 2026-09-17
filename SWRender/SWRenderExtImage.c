@@ -25,8 +25,18 @@
 #include <libswscale/swscale.h>
 #include <libavutil/imgutils.h>
 
+#include <string.h>
+
 #define __LOG_FILE__ "SWRenderExtImage.c"
 #include "MacroLog.h"
+
+typedef struct
+{
+    const uint8_t *data;
+    size_t size;
+    size_t offset;
+}
+AVIOMemData;
 
 static int ConvertFramePixFmtFitToEncoder(SWRenderBuffer *src, AVFrame *dst, const AVCodec *encoder)
 {
@@ -247,7 +257,65 @@ end:
     return ret;
 }
 
-int SWRender_LoadImageToBuffer(const char *filepath, SWRenderBuffer *buffer)
+#pragma region AVIOCallbacks
+
+// https://salivity.github.io/ffmpeg/article/custom-i-o-protocol-in-libavformat-using-aviocontext
+
+static int AVIOCallbackReadMem(void *opaque, uint8_t *buffer, int buffer_size)
+{
+    AVIOMemData *data = (AVIOMemData *)opaque;
+
+    if (data->offset >= data->size)
+        return AVERROR_EOF;
+
+    size_t offset = data->offset;
+
+    size_t bytes_to_read = buffer_size;
+    size_t remaining_bytes = data->size - data->offset;
+    if (bytes_to_read > remaining_bytes)
+        bytes_to_read = remaining_bytes;
+    
+    memcpy(buffer, data->data + offset, bytes_to_read);
+
+    data->offset = offset + bytes_to_read;
+
+    return bytes_to_read;
+}
+
+static int64_t AVIOCallbackSeekMem(void *opaque, int64_t offset, int whence)
+{
+    AVIOMemData *data = (AVIOMemData *)opaque;
+
+    int64_t new_offset = -1;
+
+    switch (whence)
+    {
+        case SEEK_SET:
+            new_offset = offset;
+            break;
+        case SEEK_CUR:
+            new_offset = data->offset + offset;
+            break;
+        case SEEK_END:
+            new_offset = data->size + offset;
+            break;
+        case AVSEEK_SIZE:
+            return data->offset;
+        default:
+            return AVERROR(EINVAL);
+    }
+
+    if ((new_offset < 0) || ((size_t)new_offset > data->size))
+        return AVERROR(EINVAL);
+
+    data->offset = (size_t)new_offset;
+
+    return new_offset;
+}
+
+#pragma endregion
+
+int SWRender_LoadImageFromFileToBuffer(const char *filepath, SWRenderBuffer *buffer)
 {
     AVFormatContext *fmt_ctx = NULL;
     int ret;
@@ -260,167 +328,69 @@ int SWRender_LoadImageToBuffer(const char *filepath, SWRenderBuffer *buffer)
         goto end;
     }
 
-    if (avformat_open_input(&fmt_ctx, filepath, NULL, NULL))
+    if ((ret = avformat_open_input(&fmt_ctx, filepath, NULL, NULL)))
     {
         fprintf(stderr, LOCATION_PREFIX_STR "avformat_open_input failed.\n");
-        ret = -1;
         goto end;
     }
 
     ret = OpenAndDecodeInput(fmt_ctx, buffer);
 
-    /*
-    pkt = av_packet_alloc();
-    if (!pkt)
+end:
+    avformat_close_input(&fmt_ctx);
+    avformat_free_context(fmt_ctx);
+
+    return ret;
+}
+
+int SWRender_LoadImageFromMemoryToBuffer(const uint8_t *src, const size_t size, SWRenderBuffer *buffer)
+{
+    AVFormatContext *fmt_ctx = NULL;
+    int ret;
+
+    fmt_ctx = avformat_alloc_context();
+    if (!fmt_ctx)
     {
-        fprintf(stderr, LOCATION_PREFIX_STR "av_packet_alloc failed.\n");
+        fprintf(stderr, LOCATION_PREFIX_STR "avformat_alloc_context failed.\n");
         ret = -1;
         goto end;
     }
 
-    frame = av_frame_alloc();
-    if (!frame)
+    uint8_t *avio_buffer = (uint8_t *)av_malloc(SWRENDER_IMG_AVIO_BUF_SIZE);
+    if (!avio_buffer)
     {
-        fprintf(stderr, LOCATION_PREFIX_STR "av_frame_alloc failed.\n");
+        fprintf(stderr, LOCATION_PREFIX_STR "av_malloc failed.\n");
         ret = -1;
         goto end;
     }
 
-    int first_video_stream_index = -1;
-    AVCodecParameters *first_video_stream_codec_para = NULL;
-    const AVCodec *first_video_stream_codec = NULL;
+    AVIOMemData data = { src, size, 0 };
 
-    avformat_find_stream_info(fmt_ctx, NULL);
-    for (int i = 0; i < fmt_ctx->nb_streams; i++)
+    AVIOContext *avio_ctx = avio_alloc_context(avio_buffer, SWRENDER_IMG_AVIO_BUF_SIZE, 0, &data, AVIOCallbackReadMem, NULL, AVIOCallbackSeekMem);
+    if (!avio_ctx)
     {
-        AVStream *stream_current = fmt_ctx->streams[i];
-        // printf(LOCATION_PREFIX_STR "stream index %d, id %d, frames %ld\n", stream_current->index, stream_current->id, stream_current->nb_frames);
-
-        AVCodecParameters *codec_para = stream_current->codecpar;
-        const AVCodec *codec = avcodec_find_decoder(codec_para->codec_id);
-        if (!codec)
-        {
-            fprintf(stderr, LOCATION_PREFIX_STR "avcodec_find_decoder failed for stream at index %d.\n", stream_current->index);
-            continue;
-        }
-
-        if (codec_para->codec_type == AVMEDIA_TYPE_VIDEO)
-        {
-            if (first_video_stream_index < 0)
-            {
-                first_video_stream_index = stream_current->index;
-                first_video_stream_codec = codec;
-                first_video_stream_codec_para = codec_para;
-
-                // printf(LOCATION_PREFIX_STR "found video stream in size %d x %d\n", codec_para->width, codec_para->height);
-            }
-        }
-    }
-
-    if (first_video_stream_index < 0)
-    {
-        fprintf(stderr, LOCATION_PREFIX_STR "could not find video stream in file \'%s\'\n", filepath);
+        fprintf(stderr, LOCATION_PREFIX_STR "avio_alloc_context failed.\n");
+        av_freep(&avio_buffer);
         ret = -1;
         goto end;
     }
 
-    codec_ctx = avcodec_alloc_context3(first_video_stream_codec);
-    if (!codec_ctx)
+    fmt_ctx->pb = avio_ctx;
+
+    if ((ret = avformat_open_input(&fmt_ctx, NULL, NULL, NULL)))
     {
-        fprintf(stderr, LOCATION_PREFIX_STR "avcodec_alloc_context3 failed.\n");
-        ret = -1;
+        fprintf(stderr, LOCATION_PREFIX_STR "avformat_open_input failed.\n");
         goto end;
     }
 
-    if (avcodec_parameters_to_context(codec_ctx, first_video_stream_codec_para) < 0)
-    {
-        fprintf(stderr, LOCATION_PREFIX_STR "avcodec_parameters_to_context failed.\n");
-        ret = -1;
-        goto end;
-    }
-    if (avcodec_open2(codec_ctx, first_video_stream_codec, NULL) < 0)
-    {
-        fprintf(stderr, LOCATION_PREFIX_STR "avcodec_open2 failed.\n");
-        ret = -1;
-        goto end;
-    }
-    
-    bool got_frame = false;
-    do
-    {
-        // [file] --read--> [pkt] --send--> [codec] --receive--> [frame]
-
-        ret = av_read_frame(fmt_ctx, pkt);
-        if (ret < 0)
-        {
-            fprintf(stderr, LOCATION_PREFIX_STR "av_read_frame failed.\n");
-            break;
-        }
-
-        if (pkt->stream_index == first_video_stream_index)
-        {
-            ret = avcodec_send_packet(codec_ctx, pkt);
-            if (ret < 0)
-            {
-                fprintf(stderr, LOCATION_PREFIX_STR "avcodec_send_packet failed.\n");
-                break;
-            }
-
-            do
-            {
-                ret = avcodec_receive_frame(codec_ctx, frame);
-                if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF)
-                    break;
-                else if (ret < 0)
-                {
-                    fprintf(stderr, LOCATION_PREFIX_STR "avcodec_receive_frame failed.\n");
-                    break;
-                }
-
-                // save content here?
-                buffer->w = frame->width;
-                buffer->h = frame->height;
-
-                struct SwsContext *sws_ctx = sws_getContext(frame->width, frame->height, frame->format, buffer->w, buffer->h, AV_PIX_FMT_RGBA, SWS_LANCZOS, NULL, NULL, NULL);
-                if (sws_ctx)
-                {
-                    // dst buffer allocation
-                    SWRender_BufferFree(buffer);
-                    ret = SWRender_BufferAlloc(buffer);
-                    if (ret < 0)
-                    {
-                        fprintf(stderr, LOCATION_PREFIX_STR "SWRender_BufferAlloc failed.\n");
-                        goto end_scale;
-                    }
-
-                    uint8_t *data[8] = { (uint8_t *)buffer->data, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
-                    int linesize[8] = { buffer->linesize, 0, 0, 0, 0, 0, 0, 0 };
-                    
-                    // scale (convert)
-                    sws_scale(sws_ctx, (const uint8_t *const *)frame->data, frame->linesize, 0, frame->height, data, linesize);
-
-                end_scale:
-                    sws_freeContext(sws_ctx);
-                }
-                else
-                    fprintf(stderr, LOCATION_PREFIX_STR "sws_getContext failed.\n");
-
-                got_frame = true;
-
-                break;
-            }
-            while (!got_frame);
-        }
-
-        av_packet_unref(pkt);
-    }
-    while (!got_frame);
-
-    ret = 0;
-    */
+    ret = OpenAndDecodeInput(fmt_ctx, buffer);
 
 end:
+    avformat_close_input(&fmt_ctx);
     avformat_free_context(fmt_ctx);
+
+    av_freep(&avio_ctx->buffer);
+    avio_context_free(&avio_ctx);
 
     return ret;
 }
