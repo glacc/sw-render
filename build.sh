@@ -4,7 +4,7 @@
 SWD="$(dirname "$(realpath "$0")")"
 
 # settings - output
-OUTPUT="sft-simp-draw"
+OUTPUT="sw-render-test"
 
 # settings - directories
 DIRS=("./" "./SWRender")

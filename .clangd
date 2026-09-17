@@ -3,7 +3,7 @@ Completion:
 
 CompileFlags:
   Add:
-    - -DAPP_NAME="osu-api-playground"
+    - -DAPP_NAME="sw-render-test"
     - -I/usr/include/freetype2
     - -I/usr/include/libpng16
 
