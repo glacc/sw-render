@@ -142,6 +142,8 @@ void FTRender_RenderStr(FTEssentials_State *state, SWRenderBuffer *surface, FT_F
 
     FT_ULong charcode_last = 0;
 
+    FT_F26Dot6 linespace = (FT_F26Dot6)((float)(face->size->metrics.ascender - face->size->metrics.descender) * state->linespace_multiplier);
+
     bool has_kerning = FT_HAS_KERNING(state->ft_face);
 
     while (*str != '\0')
@@ -169,7 +171,8 @@ void FTRender_RenderStr(FTEssentials_State *state, SWRenderBuffer *surface, FT_F
         if (newline)
         {
             glyph_x = glyph_x_rst;
-            glyph_y += face->size->metrics.height;
+            // glyph_y += face->size->metrics.height;
+            glyph_y += linespace;
 
             charcode_last = 0;
             

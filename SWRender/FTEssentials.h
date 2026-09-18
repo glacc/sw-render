@@ -30,13 +30,15 @@
 #define FLOAT_TO_F26DOT6(x)     ((FT_F26Dot6)((x) * 64.0F))
 #define DOUBLE_TO_F26DOT6(x)    ((FT_F26Dot6)((x) * 64.0))
 #define F26DOT6_TO_INT(x)       (((x) + (1 << 5)) >> 6)
-#define F26DOT6_TO_FLOAT(x)     ((float)(x) / 64.0F)
-#define F26DOT6_TO_DOUBLE(x)    ((double)(x) / 64.0)
+#define F26DOT6_TO_FLOAT(x)     ((float)(x) * (1.0F / 64.0F))
+#define F26DOT6_TO_DOUBLE(x)    ((double)(x) * (1.0 / 64.0))
 
 typedef struct FTEssentials_StateStruct
 {
     FT_Library ft_lib;
     FT_Face ft_face;
+
+    float linespace_multiplier;
 }
 FTEssentials_State;
 

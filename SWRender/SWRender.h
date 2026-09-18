@@ -95,6 +95,8 @@ extern "C"
 
     extern void SWRender_AlphaBlendRGBA8888(SWRenderColor src, SWRenderColor *dst);
 
+    extern bool SWRender_CheckBuffer(const SWRenderBuffer *buffer);
+
     extern int SWRender_BufferAlloc(SWRenderBuffer *buffer);
     extern void SWRender_BufferFree(SWRenderBuffer *buffer);
 

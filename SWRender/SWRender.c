@@ -138,15 +138,15 @@ void SWRender_AlphaBlendRGBA8888(SWRenderColor src, SWRenderColor *dst)
     dst->a = a_new;
 }
 
-static int CheckBuffer(const SWRenderBuffer *buffer)
+bool SWRender_CheckBuffer(const SWRenderBuffer *buffer)
 {
     if (!buffer)
-        return -1;
+        return false;
 
     if (!buffer->data)
-        return -1;
+        return false;
 
-    return 0;
+    return true;
 }
 
 #pragma BufferAllocation
@@ -178,7 +178,7 @@ int SWRender_BufferAlloc(SWRenderBuffer *buffer)
 
 void SWRender_BufferFree(SWRenderBuffer *buffer)
 {
-    if (CheckBuffer(buffer))
+    if (!SWRender_CheckBuffer(buffer))
         return;
 
     free_aligned_sized(buffer->data, SWRENDER_ALIGNMENT, buffer->w * buffer->h * 4);
@@ -199,7 +199,7 @@ static inline SWRenderColor *SWRender_GetPointerNextLineInternal(int linesize, S
 
 SWRenderColor *SWRender_GetPointerByPosition(const SWRenderBuffer *buffer, int x, int y)
 {
-    if (CheckBuffer(buffer))
+    if (!SWRender_CheckBuffer(buffer))
         return NULL;
 
     if ((x < 0) || (x >= buffer->w))
@@ -212,7 +212,7 @@ SWRenderColor *SWRender_GetPointerByPosition(const SWRenderBuffer *buffer, int x
 
 SWRenderColor *SWRendet_GetPointerNextLine(const SWRenderBuffer *buffer, SWRenderColor *ptr)
 {
-    if (CheckBuffer(buffer))
+    if (!SWRender_CheckBuffer(buffer))
         return NULL;
 
     SWRenderColor *data = (SWRenderColor *)buffer->data;
@@ -231,7 +231,7 @@ SWRenderColor *SWRendet_GetPointerNextLine(const SWRenderBuffer *buffer, SWRende
 
 void SWRender_FillRect(SWRenderBuffer *buffer, const SWRenderBoundI pos, SWRenderColor color, bool overwrite)
 {
-    if (CheckBuffer(buffer))
+    if (!SWRender_CheckBuffer(buffer))
         return;
 
     int x1 = pos.x1;
@@ -321,54 +321,9 @@ void SWRender_FillRect(SWRenderBuffer *buffer, const SWRenderBoundI pos, SWRende
     }
 }
 
-/*
-// do i really need this?
-static bool CheckPointInsideRoundedRect(SWRenderVec2F point, const SWRenderBoundF *bounds, float corner_radius)
-{
-    float x = point.x;
-    float y = point.y;
-
-    float x1 = bounds->x1;
-    float y1 = bounds->y1;
-    float x2 = bounds->x2;
-    float y2 = bounds->y2;
-
-    SWRenderBoundF round_corner_centers =
-    {
-        x1 + corner_radius,
-        y1 + corner_radius,
-        x2 - corner_radius,
-        y2 - corner_radius,
-    };
-
-    if ((y < y1) || (y > y2))
-        return false;
-
-    if (x < round_corner_centers.x1)
-    {
-        if (y < round_corner_centers.y1)
-            return (SWRender_Vec2FLen((SWRenderVec2F){ x - round_corner_centers.x1, y - round_corner_centers.y1 }) <= corner_radius);
-
-        if (y > round_corner_centers.y2)
-            return (SWRender_Vec2FLen((SWRenderVec2F){ x - round_corner_centers.x1, y - round_corner_centers.y2 }) <= corner_radius);
-
-        return (x >= x1);
-    }
-
-    if (x > round_corner_centers.x2)
-    {
-        if (y < round_corner_centers.y1)
-            return (SWRender_Vec2FLen((SWRenderVec2F){ x - round_corner_centers.x2, y - round_corner_centers.y1 }) <= corner_radius);
-
-        if (y > round_corner_centers.y2)
-            return (SWRender_Vec2FLen((SWRenderVec2F){ x - round_corner_centers.x2, y - round_corner_centers.y2 }) <= corner_radius);
-    }
-}
-*/
-
 void SWRender_FillCircle(SWRenderBuffer *buffer, SWRenderVec2F center, float radius, const SWRenderBoundI *crop, SWRenderColor color)
 {
-    if (CheckBuffer(buffer))
+    if (!SWRender_CheckBuffer(buffer))
         return;
 
     int x1, y1, x2, y2;
@@ -453,7 +408,7 @@ void SWRender_FillCircle(SWRenderBuffer *buffer, SWRenderVec2F center, float rad
 
 void SWRender_FillRing(SWRenderBuffer *buffer, SWRenderVec2F center, float radius, float thickness, const SWRenderBoundI *crop, SWRenderColor color)
 {
-    if (CheckBuffer(buffer))
+    if (!SWRender_CheckBuffer(buffer))
         return;
 
     int x1, y1, x2, y2;
@@ -546,7 +501,7 @@ void SWRender_FillRing(SWRenderBuffer *buffer, SWRenderVec2F center, float radiu
 
 void SWRender_FillRectRounded(SWRenderBuffer *buffer, const SWRenderBoundF pos, float corner_radius, SWRenderColor color)
 {
-    if (CheckBuffer(buffer))
+    if (!SWRender_CheckBuffer(buffer))
         return;
     
     float x1_orig = pos.x1;
@@ -647,7 +602,7 @@ void SWRender_FillRectRounded(SWRenderBuffer *buffer, const SWRenderBoundF pos, 
     // adjusted sequence to 1 -> 3 -> 2 to reuse variables
 
     int x1_draw = x1_final;
-    int y1_draw = x1_final;
+    int y1_draw = y1_final;
     int x2_draw = x2_final;
     int y2_draw = y2_final;
     int x3_draw = x3_final;
@@ -1034,7 +989,7 @@ float SWRender_DistPtLineSeg(SWRenderVec2F point, const SWRenderBoundF *line)
 
 void SWRender_Line(SWRenderBuffer *buffer, const SWRenderBoundF *line_pos, SWRenderColor color, float thickness)
 {
-    if (CheckBuffer(buffer))
+    if (!SWRender_CheckBuffer(buffer))
         return;
 
     if (thickness <= 0)
@@ -1076,7 +1031,7 @@ void SWRender_Line(SWRenderBuffer *buffer, const SWRenderBoundF *line_pos, SWRen
 
 void SWRender_CopyBuffer(const SWRenderBuffer *src, const SWRenderBoundI *src_crop, SWRenderBuffer *dst, const SWRenderVec2I dst_pos_up_left)
 {
-    if (CheckBuffer(src) || CheckBuffer(dst))
+    if (!SWRender_CheckBuffer(src) || !SWRender_CheckBuffer(dst))
         return;
 
     // source
@@ -1177,7 +1132,7 @@ void SWRender_CopyBuffer(const SWRenderBuffer *src, const SWRenderBoundI *src_cr
 
 void SWRender_CopyBufferScaled(const SWRenderBuffer *src, const SWRenderBoundI *src_crop, SWRenderBuffer *dst, const SWRenderBoundI *dst_pos)
 {
-    if (CheckBuffer(src) || CheckBuffer(dst))
+    if (!SWRender_CheckBuffer(src) || !SWRender_CheckBuffer(dst))
         return;
 
     bool horz_flipped = false;
