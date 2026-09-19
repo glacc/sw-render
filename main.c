@@ -86,14 +86,14 @@ int TestSWRender(void)
         goto end;
     }
 
-    if (SWRender_BufferAlloc(&buffer_output) < 0)
+    if (!SWRender_BufferAlloc(&buffer_output))
     {
         fprintf(stderr, LOCATION_PREFIX_STR "buffer_output mem alloc failed.\n");
         ret = -1;
         goto end;
     }
 
-    if (SWRender_BufferAlloc(&buffer_scaled) < 0)
+    if (!SWRender_BufferAlloc(&buffer_scaled))
     {
         fprintf(stderr, LOCATION_PREFIX_STR "buffer_output mem alloc failed.\n");
         ret = -1;

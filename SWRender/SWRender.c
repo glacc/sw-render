@@ -151,7 +151,7 @@ bool SWRender_CheckBuffer(const SWRenderBuffer *buffer)
 
 #pragma BufferAllocation
 
-int SWRender_BufferAlloc(SWRenderBuffer *buffer)
+bool SWRender_BufferAlloc(SWRenderBuffer *buffer)
 {
     if (!buffer)
         return -1;
@@ -162,18 +162,18 @@ int SWRender_BufferAlloc(SWRenderBuffer *buffer)
     if (w <= 0 || h <= 0)
     {
         fprintf(stderr, LOCATION_PREFIX_STR "invalid argument.\n");
-        return -1;
+        return false;
     }
 
     if (!(buffer->data = aligned_alloc(SWRENDER_ALIGNMENT, w * h * 4)))
     {
         fprintf(stderr, LOCATION_PREFIX_STR "failed to allocate memory for buffer.\n");
-        return -1;
+        return false;
     }
 
     buffer->linesize = w * 4;
 
-    return 0;
+    return true;
 }
 
 void SWRender_BufferFree(SWRenderBuffer *buffer)

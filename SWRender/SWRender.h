@@ -97,7 +97,7 @@ extern "C"
 
     extern bool SWRender_CheckBuffer(const SWRenderBuffer *buffer);
 
-    extern int SWRender_BufferAlloc(SWRenderBuffer *buffer);
+    extern bool SWRender_BufferAlloc(SWRenderBuffer *buffer);
     extern void SWRender_BufferFree(SWRenderBuffer *buffer);
 
     extern void SWRender_SetPixel(SWRenderBuffer *buffer, SWRenderVec2I pos, SWRenderColor color);
