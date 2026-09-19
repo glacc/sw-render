@@ -1216,6 +1216,9 @@ void SWRender_CopyBufferScaled(const SWRenderBuffer *src, const SWRenderBoundI *
     int linesize_src = src->linesize;
     int linesize_dst = dst->linesize;
 
+    int src_x_max = src_w - 1;
+    int src_y_max = src_h - 1;
+
     SWRenderColor *ptr_dst_row_start = (SWRenderColor *)((uint8_t *)dst->data + (linesize_dst * draw_y1)) + draw_x1;
 
     for (int y = draw_y1; y <= draw_y2; y++)
@@ -1225,7 +1228,7 @@ void SWRender_CopyBufferScaled(const SWRenderBuffer *src, const SWRenderBoundI *
 
         int src_y = (int)((src_y1 + ((src_y2 - src_y1) * progress_y)) + 0.5F);
         if (src_y < 0) src_y = 0;
-        if (src_y >= src_h) src_y = src_h - 1;
+        if (src_y > src_y_max) src_y = src_y_max;
 
         SWRenderColor *ptr_src_row_start = (SWRenderColor *)((uint8_t *)src->data + (linesize_src * src_y));
         SWRenderColor *ptr_dst_pixel = ptr_dst_row_start;
@@ -1237,7 +1240,7 @@ void SWRender_CopyBufferScaled(const SWRenderBuffer *src, const SWRenderBoundI *
 
             int src_x = (int)((src_x1 + ((src_x2 - src_x1) * progress_x)) + 0.5F);
             if (src_x < 0) src_x = 0;
-            if (src_x >= src_w) src_x = src_w - 1;
+            if (src_x >= src_x_max) src_x = src_x_max;
 
             SWRender_AlphaBlendRGBA8888(ptr_src_row_start[src_x], ptr_dst_pixel);
 
