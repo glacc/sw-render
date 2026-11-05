@@ -37,6 +37,7 @@
 
 #define SWRENDER_EPSILON FLT_EPSILON
 
+#ifndef _SWRENDER_USE_NON_RGBA_PIXFMT_
 typedef struct
 {
     uint8_t r;
@@ -44,7 +45,10 @@ typedef struct
     uint8_t b;
     uint8_t a;
 }
-SWRenderColor;
+__attribute__((packed)) SWRenderColor;
+#else
+#include "SWRenderColor.h"
+#endif
 
 typedef struct
 {
