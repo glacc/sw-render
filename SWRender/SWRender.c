@@ -29,7 +29,7 @@
 #define __LOG_FILE__ "SWRenderExt.c"
 #include "MacroLog.h"
 
-#pragma region CheckAndSwapBoundCorners
+#pragma region RectAndBounds
 
 static inline void CheckAndSwapBoundCornersInt(int *x1, int *y1, int *x2, int *y2)
 {
@@ -91,6 +91,66 @@ void SWRender_CheckAndSwapBoundCornersFloat(SWRenderBoundF *bounds)
     SWRender_CheckAndSwapBoundCornersFloatInternal(bounds);
 }
 
+bool SWRender_GetIntersectionBetweenBoundI(const SWRenderBoundI *bound_1, const SWRenderBoundI *bound_2, SWRenderBoundI *out_intersection)
+{
+    if (!(bound_1 && bound_2))
+        return false;
+
+    SWRenderBoundI bound_checked_1 = *bound_1;
+    SWRenderBoundI bound_checked_2 = *bound_2;
+    SWRender_CheckAndSwapBoundCornersInt(&bound_checked_1);
+    SWRender_CheckAndSwapBoundCornersInt(&bound_checked_2);
+
+    if (bound_checked_2.x2 < bound_checked_1.x1)
+        return false;
+    if (bound_checked_2.x1 > bound_checked_1.x2)
+        return false;
+    if (bound_checked_2.y2 < bound_checked_1.y1)
+        return false;
+    if (bound_checked_2.y1 > bound_checked_1.y2)
+        return false;
+
+    if (!out_intersection)
+        return true;
+
+    *out_intersection = bound_checked_1;
+
+    if (bound_checked_2.x1 > bound_checked_1.x1)
+        out_intersection->x1 = bound_checked_2.x1;
+    if (bound_checked_2.y1 > bound_checked_1.y1)
+        out_intersection->y1 = bound_checked_2.y1;
+    if (bound_checked_2.x2 < bound_checked_1.x2)
+        out_intersection->x2 = bound_checked_2.x2;
+    if (bound_checked_2.y2 < bound_checked_1.y2)
+        out_intersection->y2 = bound_checked_2.y2;
+
+    return true;
+}
+
+SWRenderBoundI SWRender_RectToBoundI(const SWRenderRectI rect)
+{
+    return (SWRenderBoundI)
+    {
+        rect.x,
+        rect.y,
+        rect.x + rect.w - 1,
+        rect.y + rect.h - 1, 
+    };
+}
+
+SWRenderBoundF SWRender_RectToBoundF(const SWRenderRectF rect)
+{
+    return (SWRenderBoundF)
+    {
+        rect.x,
+        rect.y,
+        rect.x + rect.w,
+        rect.y + rect.h,
+    };
+}
+
+#pragma endregion
+
 #pragma endregion
 
 #pragma region Vec2F
@@ -138,6 +198,8 @@ void SWRender_AlphaBlendRGBA8888(SWRenderColor src, SWRenderColor *dst)
     dst->a = a_new;
 }
 
+#pragma region Buffer
+
 bool SWRender_CheckBuffer(const SWRenderBuffer *buffer)
 {
     if (!buffer)
@@ -148,8 +210,6 @@ bool SWRender_CheckBuffer(const SWRenderBuffer *buffer)
 
     return true;
 }
-
-#pragma BufferAllocation
 
 bool SWRender_BufferAlloc(SWRenderBuffer *buffer)
 {
@@ -186,6 +246,8 @@ void SWRender_BufferFree(SWRenderBuffer *buffer)
 }
 
 #pragma endregion
+
+#pragma region Pointer
 
 static inline SWRenderColor *SWRender_GetPointerByPositionInternal(SWRenderColor *data, int linesize, int x, int y)
 {
@@ -229,9 +291,16 @@ SWRenderColor *SWRendet_GetPointerNextLine(const SWRenderBuffer *buffer, SWRende
     return SWRender_GetPointerNextLineInternal(linesize, ptr);
 }
 
+#pragma endregion
+
+#pragma region Fill
+
 void SWRender_FillRect(SWRenderBuffer *buffer, const SWRenderBoundI pos, SWRenderColor color, bool overwrite)
 {
     if (!SWRender_CheckBuffer(buffer))
+        return;
+
+    if ((color.a == 0) && !overwrite)
         return;
 
     int x1 = pos.x1;
@@ -253,6 +322,9 @@ void SWRender_FillRect(SWRenderBuffer *buffer, const SWRenderBoundI pos, SWRende
 
     bool x1x2_same = (x1 == x2);
     bool y1y2_same = (y1 == y2);
+
+    if (color.a == 255)
+        overwrite = true;
 
     int linesize = buffer->linesize;
     SWRenderColor *ptr_row_start = SWRender_GetPointerByPositionInternal((SWRenderColor *)buffer->data, linesize, x1, y1);
@@ -725,6 +797,8 @@ void SWRender_FillRectRounded(SWRenderBuffer *buffer, const SWRenderBoundF pos, 
         SWRender_FillRect(buffer, (SWRenderBoundI){ x_start, y_start, x_end, y_end }, color, false);
     }
 }
+
+#pragma endregion
 
 #pragma region Line
 

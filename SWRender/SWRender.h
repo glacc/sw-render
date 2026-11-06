@@ -52,6 +52,18 @@ __attribute__((packed)) SWRenderColor;
 
 typedef struct
 {
+    int x, y, w, h;
+}
+SWRenderRectI;
+
+typedef struct
+{
+    float x, y, w, h;
+}
+SWRenderRectF;
+
+typedef struct
+{
     int x1, y1, x2, y2;
 }
 SWRenderBoundI;
@@ -93,6 +105,10 @@ extern "C"
 
     extern void SWRender_CheckAndSwapBoundCornersInt(SWRenderBoundI *bounds);
     extern void SWRender_CheckAndSwapBoundCornersFloat(SWRenderBoundF *bounds);
+    
+    extern bool SWRender_GetIntersectionBetweenBoundI(const SWRenderBoundI *bound_1, const SWRenderBoundI *bound_2, SWRenderBoundI *out_intersection);
+    extern SWRenderBoundI SWRender_RectToBoundI(const SWRenderRectI rect);
+    extern SWRenderBoundF SWRender_RectToBoundF(const SWRenderRectF rect);
 
     extern float SWRender_Vec2FLen(SWRenderVec2F vec);
     extern float SWRender_DistPtLineSeg(SWRenderVec2F point, const SWRenderBoundF *line);
