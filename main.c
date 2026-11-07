@@ -102,19 +102,19 @@ int TestSWRender(void)
 
     // output
     // alpha background
-    SWRender_FillRect(&buffer_output, (SWRenderBoundI){ 0, 0, size - 1, size - 1 }, (SWRenderColor){ 0x00, 0x00, 0x00, 0x00 }, true);
+    SWRender_FillRect(&buffer_output, &(SWRenderBoundI){ 0, 0, size - 1, size - 1 }, (SWRenderColor){ 0x00, 0x00, 0x00, 0x00 }, true);
 
     // blit image?
     SWRender_LoadImageFromFileToBuffer("./test_image.jpg", &buffer_image);
     SWRender_CopyBuffer(&buffer_image, &(SWRenderBoundI){ 0, 0, buffer_image.w * 2 / 3, buffer_image.h }, &buffer_output, (SWRenderVec2I){ (-buffer_image.w / 4), 0 });
 
     // white background
-    SWRender_FillRect(&buffer_output, (SWRenderBoundI){ 0, 0, (size * 3 / 4) - 1, (size * 3 / 4) - 1 }, (SWRenderColor){ 0xFF, 0xFF, 0xFF, 0xFF }, false);
+    SWRender_FillRect(&buffer_output, &(SWRenderBoundI){ 0, 0, (size * 3 / 4) - 1, (size * 3 / 4) - 1 }, (SWRenderColor){ 0xFF, 0xFF, 0xFF, 0xFF }, false);
 
     // colors
-    SWRender_FillRect(&buffer_output, (SWRenderBoundI){ 16, 16, 16 + color_size, 16 + color_size }, (SWRenderColor){ 0xFF, 0x00, 0x00, 0x80 }, false);
-    SWRender_FillRect(&buffer_output, (SWRenderBoundI){ 32, 32, 32 + color_size, 32 + color_size }, (SWRenderColor){ 0x00, 0xFF, 0x00, 0x80 }, false);
-    SWRender_FillRect(&buffer_output, (SWRenderBoundI){ 48, 48, 48 + color_size, 48 + color_size }, (SWRenderColor){ 0x00, 0x00, 0xFF, 0x80 }, false);
+    SWRender_FillRect(&buffer_output, &(SWRenderBoundI){ 16, 16, 16 + color_size, 16 + color_size }, (SWRenderColor){ 0xFF, 0x00, 0x00, 0x80 }, false);
+    SWRender_FillRect(&buffer_output, &(SWRenderBoundI){ 32, 32, 32 + color_size, 32 + color_size }, (SWRenderColor){ 0x00, 0xFF, 0x00, 0x80 }, false);
+    SWRender_FillRect(&buffer_output, &(SWRenderBoundI){ 48, 48, 48 + color_size, 48 + color_size }, (SWRenderColor){ 0x00, 0x00, 0xFF, 0x80 }, false);
 
     // test text
     FTEssentials_SetSize96DPI(&ft_state, INT_TO_F26DOT6(18));
@@ -143,7 +143,7 @@ int TestSWRender(void)
 
     const float angle_offset = -M_PI_2f;
 
-    SWRender_FillRectRounded(&buffer_output, (SWRenderBoundF){ bg_rect_pos_ul, bg_rect_pos_ul, bg_rect_pos_dr, bg_rect_pos_dr }, bg_rect_corner_radius, (SWRenderColor){ 0x00, 0x00, 0x00, 0x40 });
+    SWRender_FillRectRounded(&buffer_output, &(SWRenderBoundF){ bg_rect_pos_ul, bg_rect_pos_ul, bg_rect_pos_dr, bg_rect_pos_dr }, bg_rect_corner_radius, (SWRenderColor){ 0x00, 0x00, 0x00, 0x40 });
     SWRender_FillCircle(&buffer_output, (SWRenderVec2F){ half_size , half_size }, bg_radius, NULL, (SWRenderColor){ 0x00, 0x00, 0x00, 0x40 });
     SWRender_FillRing(&buffer_output, (SWRenderVec2F){ half_size, half_size }, bg_radius, bg_ring_thickness, NULL, (SWRenderColor){ 0x00, 0x00, 0x00, 0x40 });
 

@@ -29,7 +29,55 @@
 #define __LOG_FILE__ "SWRenderExt.c"
 #include "MacroLog.h"
 
-#pragma region RectAndBounds
+#pragma region Pointer
+
+static inline SWRenderColor *SWRender_GetPointerByPositionInternal(SWRenderColor *data, int linesize, int x, int y)
+{
+    return (SWRenderColor *)((uint8_t *)data + (linesize * y)) + x;
+}
+
+static inline SWRenderColor *SWRender_GetPointerNextLineInternal(int linesize, SWRenderColor *ptr)
+{
+    return (SWRenderColor *)((uint8_t *)ptr + linesize);
+}
+
+SWRenderColor *SWRender_GetPointerByPosition(const SWRenderBuffer *buffer, int x, int y)
+{
+    if (!SWRender_CheckBuffer(buffer))
+        return NULL;
+
+    if ((x < 0) || (x >= buffer->w))
+        return NULL;
+    if ((y < 0) || (y >= buffer->h))
+        return NULL;
+
+    return SWRender_GetPointerByPositionInternal((SWRenderColor *)buffer->data, buffer->linesize, x, y);
+}
+
+SWRenderColor *SWRender_GetPointerNextLine(const SWRenderBuffer *buffer, SWRenderColor *ptr)
+{
+    if (!SWRender_CheckBuffer(buffer))
+        return NULL;
+
+    SWRenderColor *data = (SWRenderColor *)buffer->data;
+
+    if (ptr < data)
+        return NULL;
+
+    int linesize = buffer->linesize;
+
+    SWRenderColor *ptr_max_offset = (SWRenderColor *)((uint8_t *)data + (linesize * (buffer->h - 1)));
+    if (ptr >= ptr_max_offset)
+        return NULL;
+
+    return SWRender_GetPointerNextLineInternal(linesize, ptr);
+}
+
+#pragma endregion
+
+#pragma region CheckAndSwapBoundCorners
+
+#pragma region CheckAndSwapBoundCornersInternal
 
 static inline void CheckAndSwapBoundCornersInt(int *x1, int *y1, int *x2, int *y2)
 {
@@ -75,6 +123,8 @@ static inline void SWRender_CheckAndSwapBoundCornersFloatInternal(SWRenderBoundF
     CheckAndSwapBoundCornersFloat(&bounds->x1, &bounds->y1, &bounds->x2, &bounds->y2);
 }
 
+#pragma endregion
+
 void SWRender_CheckAndSwapBoundCornersInt(SWRenderBoundI *bounds)
 {
     if (!bounds)
@@ -91,15 +141,103 @@ void SWRender_CheckAndSwapBoundCornersFloat(SWRenderBoundF *bounds)
     SWRender_CheckAndSwapBoundCornersFloatInternal(bounds);
 }
 
-bool SWRender_GetIntersectionBetweenBoundI(const SWRenderBoundI *bound_1, const SWRenderBoundI *bound_2, SWRenderBoundI *out_intersection)
+#pragma endregion
+
+#pragma region RectBoundConversion
+
+#pragma region RectBoundConversionInternal
+
+static void SWRender_RectToBoundIntInternal(SWRenderBoundI *bounds, const SWRenderRectI *rect)
+{
+    bounds->x1 = rect->x;
+    bounds->y1 = rect->y;
+    bounds->x2 = rect->x + rect->w - 1;
+    bounds->y2 = rect->y + rect->h - 1;
+}
+
+static void SWRender_RectToBoundFloatInternal(SWRenderBoundF *bounds, const SWRenderRectF *rect)
+{
+    bounds->x1 = rect->x;
+    bounds->y1 = rect->y;
+    bounds->x2 = rect->x + rect->w - 1;
+    bounds->y2 = rect->y + rect->h - 1;
+}
+
+static void SWRender_BoundToRectIntInternal(SWRenderRectI *rect, const SWRenderBoundI *bounds)
+{
+    SWRenderBoundI bound_checked = *bounds;
+    SWRender_CheckAndSwapBoundCornersIntInternal(&bound_checked);
+    rect->x = bounds->x1;
+    rect->y = bounds->y1;
+    rect->w = bounds->x2 - bounds->x1 + 1;
+    rect->h = bounds->y2 - bounds->y1 + 1;
+}
+
+static void SWRender_BoundToRectFloatInternal(SWRenderRectF *rect, const SWRenderBoundF *bounds)
+{
+    SWRenderBoundF bound_checked = *bounds;
+    SWRender_CheckAndSwapBoundCornersFloatInternal(&bound_checked);
+    rect->x = bounds->x1;
+    rect->y = bounds->y1;
+    rect->w = bounds->x2 - bounds->x1;
+    rect->h = bounds->y2 - bounds->y1;
+}
+
+#pragma endregion
+
+bool SWRender_RectToBoundInt(SWRenderBoundI *bounds, const SWRenderRectI *rect)
+{
+    if (!(bounds && rect))
+        return false;
+
+    SWRender_RectToBoundIntInternal(bounds, rect);
+
+    return true;
+}
+
+bool SWRender_RectToBoundFloat(SWRenderBoundF *bounds, const SWRenderRectF *rect)
+{
+    if (!(bounds && rect))
+        return false;
+
+    SWRender_RectToBoundFloatInternal(bounds, rect);
+
+    return true;
+}
+
+bool SWRender_BoundToRectInt(SWRenderRectI *rect, const SWRenderBoundI *bounds)
+{
+    if (!(bounds && rect))
+        return false;
+
+    SWRender_BoundToRectIntInternal(rect, bounds);
+
+    return true;
+}
+
+bool SWRender_BoundToRectFloat(SWRenderRectF *rect, const SWRenderBoundF *bounds)
+{
+    if (!(bounds && rect))
+        return false;
+
+    SWRender_BoundToRectFloatInternal(rect, bounds);
+
+    return true;
+}
+
+#pragma endregion
+
+#pragma region BoundIntersection
+
+bool SWRender_GetIntersectionBetweenBoundInt(const SWRenderBoundI *bound_1, const SWRenderBoundI *bound_2, SWRenderBoundI *out_intersection)
 {
     if (!(bound_1 && bound_2))
         return false;
 
     SWRenderBoundI bound_checked_1 = *bound_1;
     SWRenderBoundI bound_checked_2 = *bound_2;
-    SWRender_CheckAndSwapBoundCornersInt(&bound_checked_1);
-    SWRender_CheckAndSwapBoundCornersInt(&bound_checked_2);
+    SWRender_CheckAndSwapBoundCornersIntInternal(&bound_checked_1);
+    SWRender_CheckAndSwapBoundCornersIntInternal(&bound_checked_2);
 
     if (bound_checked_2.x2 < bound_checked_1.x1)
         return false;
@@ -127,29 +265,85 @@ bool SWRender_GetIntersectionBetweenBoundI(const SWRenderBoundI *bound_1, const 
     return true;
 }
 
-SWRenderBoundI SWRender_RectToBoundI(const SWRenderRectI rect)
+bool SWRender_GetIntersectionBetweenBoundFloat(const SWRenderBoundF *bound_1, const SWRenderBoundF *bound_2, SWRenderBoundF *out_intersection)
 {
-    return (SWRenderBoundI)
-    {
-        rect.x,
-        rect.y,
-        rect.x + rect.w - 1,
-        rect.y + rect.h - 1, 
-    };
-}
+    if (!(bound_1 && bound_2))
+        return false;
 
-SWRenderBoundF SWRender_RectToBoundF(const SWRenderRectF rect)
-{
-    return (SWRenderBoundF)
-    {
-        rect.x,
-        rect.y,
-        rect.x + rect.w,
-        rect.y + rect.h,
-    };
+    SWRenderBoundF bound_checked_1 = *bound_1;
+    SWRenderBoundF bound_checked_2 = *bound_2;
+    SWRender_CheckAndSwapBoundCornersFloatInternal(&bound_checked_1);
+    SWRender_CheckAndSwapBoundCornersFloatInternal(&bound_checked_2);
+
+    if (bound_checked_2.x2 <= bound_checked_1.x1)
+        return false;
+    if (bound_checked_2.x1 >= bound_checked_1.x2)
+        return false;
+    if (bound_checked_2.y2 <= bound_checked_1.y1)
+        return false;
+    if (bound_checked_2.y1 >= bound_checked_1.y2)
+        return false;
+
+    if (!out_intersection)
+        return true;
+
+    *out_intersection = bound_checked_1;
+
+    if (bound_checked_2.x1 > bound_checked_1.x1)
+        out_intersection->x1 = bound_checked_2.x1;
+    if (bound_checked_2.y1 > bound_checked_1.y1)
+        out_intersection->y1 = bound_checked_2.y1;
+    if (bound_checked_2.x2 < bound_checked_1.x2)
+        out_intersection->x2 = bound_checked_2.x2;
+    if (bound_checked_2.y2 < bound_checked_1.y2)
+        out_intersection->y2 = bound_checked_2.y2;
+
+    return true;
 }
 
 #pragma endregion
+
+#pragma region BoundIncluding
+
+static void SWRender_IncludeBoundToBoundIntInternal(SWRenderBoundI *dst, const SWRenderBoundI *bounds)
+{
+    if (bounds->x1 < dst->x1)
+        dst->x1 = bounds->x1;
+    if (bounds->y1 < dst->y1)
+        dst->y1 = bounds->y1;
+    if (bounds->x2 > dst->x2)
+        dst->x2 = bounds->x2;
+    if (bounds->y2 > dst->y2)
+        dst->y2 = bounds->y2;
+}
+
+static void SWRender_IncludeBoundToBoundFloatInternal(SWRenderBoundF *dst, const SWRenderBoundF *bounds)
+{
+    if (bounds->x1 < dst->x1)
+        dst->x1 = bounds->x1;
+    if (bounds->y1 < dst->y1)
+        dst->y1 = bounds->y1;
+    if (bounds->x2 > dst->x2)
+        dst->x2 = bounds->x2;
+    if (bounds->y2 > dst->y2)
+        dst->y2 = bounds->y2;
+}
+
+void SWRender_IncludeBoundToBoundInt(SWRenderBoundI *dst, const SWRenderBoundI *bounds)
+{
+    if (!(dst && bounds))
+        return;
+
+    SWRender_IncludeBoundToBoundIntInternal(dst, bounds);
+}
+
+void SWRender_IncludeBoundToBoundFloat(SWRenderBoundF *dst, const SWRenderBoundF *bounds)
+{
+    if (!(dst && bounds))
+        return;
+
+    SWRender_IncludeBoundToBoundFloatInternal(dst, bounds);
+}
 
 #pragma endregion
 
@@ -163,6 +357,70 @@ static inline float SWRender_Vec2FLenInternal(SWRenderVec2F vec)
 float SWRender_Vec2FLen(SWRenderVec2F vec)
 {
     return SWRender_Vec2FLenInternal(vec);
+}
+
+#pragma endregion
+
+#pragma region Vec2BetweenBoundRect
+
+#pragma region Vec2BetweenBoundRectInternal
+
+static bool SWRender_IsVec2IInsideBoundIInternal(const SWRenderVec2I *vector, const SWRenderBoundI *bounds)
+{
+    if (vector->x < bounds->x1 || vector->x > bounds->x2)
+        return false;
+
+    if (vector->y < bounds->y1 || vector->y > bounds->y2)
+        return false;
+
+    return true;
+}
+
+static bool SWRender_IsVec2FInsideBoundFInternal(const SWRenderVec2F *vector, const SWRenderBoundF *bounds)
+{
+    if (vector->x < bounds->x1 || vector->x > bounds->x2)
+        return false;
+
+    if (vector->y < bounds->y1 || vector->y > bounds->y2)
+        return false;
+
+    return true;
+}
+
+static bool SWRender_IsVec2IInsideRectIInternal(const SWRenderVec2I *vector, const SWRenderRectI *rect)
+{
+    bool horz_inside = (vector->x >= rect->x) && (vector->x < rect->x + rect->w);
+    bool vert_inside = (vector->y >= rect->y) && (vector->y < rect->y + rect->h);
+    return horz_inside & vert_inside;
+}
+
+static bool SWRender_IsVec2FInsideRectFInternal(const SWRenderVec2F *vector, const SWRenderRectF *rect)
+{
+    bool horz_inside = (vector->x >= rect->x) && (vector->x < rect->x + rect->w);
+    bool vert_inside = (vector->y >= rect->y) && (vector->y < rect->y + rect->h);
+    return horz_inside & vert_inside;
+}
+
+#pragma endregion
+
+bool SWRender_IsVec2IInsideBoundI(const SWRenderVec2I vector, const SWRenderBoundI *bounds)
+{
+    return (bounds != NULL) && SWRender_IsVec2IInsideBoundIInternal(&vector, bounds);
+}
+
+bool SWRender_IsVec2FInsideBoundF(const SWRenderVec2F vector, const SWRenderBoundF *bounds)
+{
+    return (bounds != NULL) && SWRender_IsVec2FInsideBoundFInternal(&vector, bounds);
+}
+
+bool SWRender_IsVec2IInsideRectI(const SWRenderVec2I vector, const SWRenderRectI *rect)
+{
+    return (rect != NULL) && SWRender_IsVec2IInsideRectIInternal(&vector, rect);
+}
+
+bool SWRender_IsVec2FInsideRectF(const SWRenderVec2F vector, const SWRenderRectF *rect)
+{
+    return (rect != NULL) && SWRender_IsVec2FInsideRectFInternal(&vector, rect);
 }
 
 #pragma endregion
@@ -245,57 +503,80 @@ void SWRender_BufferFree(SWRenderBuffer *buffer)
     buffer->data = NULL;
 }
 
+#pragma region BufferInternalFunctions
+
+static void SWRender_BufferGetRectInternal(SWRenderRectI *rect, const SWRenderBuffer *buffer)
+{
+    rect->x = 0;
+    rect->y = 0;
+    rect->w = buffer->w;
+    rect->h = buffer->h;
+}
+
+static void SWRender_BufferGetBoundsInternal(SWRenderBoundI *bounds, const SWRenderBuffer *buffer)
+{
+    bounds->x1 = 0;
+    bounds->y1 = 0;
+    bounds->x2 = buffer->w - 1;
+    bounds->y2 = buffer->h - 1;
+}
+
 #pragma endregion
 
-#pragma region Pointer
-
-static inline SWRenderColor *SWRender_GetPointerByPositionInternal(SWRenderColor *data, int linesize, int x, int y)
+bool SWRender_BufferGetRect(SWRenderRectI *rect, const SWRenderBuffer *buffer)
 {
-    return (SWRenderColor *)((uint8_t *)data + (linesize * y)) + x;
-}
+    if (!rect)
+        return false;
 
-static inline SWRenderColor *SWRender_GetPointerNextLineInternal(int linesize, SWRenderColor *ptr)
-{
-    return (SWRenderColor *)((uint8_t *)ptr + linesize);
-}
-
-SWRenderColor *SWRender_GetPointerByPosition(const SWRenderBuffer *buffer, int x, int y)
-{
     if (!SWRender_CheckBuffer(buffer))
-        return NULL;
+        return false;
 
-    if ((x < 0) || (x >= buffer->w))
-        return NULL;
-    if ((y < 0) || (y >= buffer->h))
-        return NULL;
+    SWRender_BufferGetRectInternal(rect, buffer);
 
-    return SWRender_GetPointerByPositionInternal((SWRenderColor *)buffer->data, buffer->linesize, x, y);
+    return true;
 }
 
-SWRenderColor *SWRender_GetPointerNextLine(const SWRenderBuffer *buffer, SWRenderColor *ptr)
+bool SWRender_BufferGetBounds(SWRenderBoundI *bounds, const SWRenderBuffer *buffer)
 {
+    if (!bounds)
+        return false;
+
     if (!SWRender_CheckBuffer(buffer))
-        return NULL;
+        return false;
 
-    SWRenderColor *data = (SWRenderColor *)buffer->data;
+    SWRender_BufferGetBoundsInternal(bounds, buffer);
 
-    if (ptr < data)
-        return NULL;
+    return true;
+}
 
-    int linesize = buffer->linesize;
+bool SWRender_BufferCrop(SWRenderBuffer *dst, const SWRenderBuffer *src, const SWRenderBoundI *bounds)
+{
+    if (!dst)
+        return false;
 
-    SWRenderColor *ptr_max_offset = (SWRenderColor *)((uint8_t *)data + (linesize * (buffer->h - 1)));
-    if (ptr >= ptr_max_offset)
-        return NULL;
+    if (!SWRender_CheckBuffer(src))
+        return false;
 
-    return SWRender_GetPointerNextLineInternal(linesize, ptr);
+    SWRenderBoundI bounds_src;
+    SWRender_BufferGetBoundsInternal(&bounds_src, src);
+
+    SWRenderBoundI bounds_crop;
+    if (!SWRender_GetIntersectionBetweenBoundInt(bounds, &bounds_src, &bounds_crop))
+        return false;
+
+    dst->data = (uint32_t *)SWRender_GetPointerByPositionInternal((SWRenderColor *)src->data, src->linesize, bounds_crop.x1, bounds_crop.y1);
+    dst->w = bounds_crop.x2 - bounds_crop.x1 + 1;
+    dst->h = bounds_crop.y2 - bounds_crop.y1 + 1;
+    dst->linesize = src->linesize;
+
+    return true;
 }
 
 #pragma endregion
 
 #pragma region Fill
 
-void SWRender_FillRect(SWRenderBuffer *buffer, const SWRenderBoundI pos, SWRenderColor color, bool overwrite)
+void SWRender_FillRect(SWRenderBuffer *buffer, const SWRenderBoundI *bounds, SWRenderColor color, bool overwrite)
 {
     if (!SWRender_CheckBuffer(buffer))
         return;
@@ -303,22 +584,35 @@ void SWRender_FillRect(SWRenderBuffer *buffer, const SWRenderBoundI pos, SWRende
     if ((color.a == 0) && !overwrite)
         return;
 
-    int x1 = pos.x1;
-    int x2 = pos.x2;
-    int y1 = pos.y1;
-    int y2 = pos.y2;
+    int x1, x2;
+    int y1, y2;
+
     int buf_w = buffer->w;
     int buf_h = buffer->h;
 
-    CheckAndSwapBoundCornersInt(&x1, &y1, &x2, &y2);
+    if (bounds)
+    {
+        x1 = bounds->x1;
+        y1 = bounds->y1;
+        x2 = bounds->x2;
+        y2 = bounds->y2;
+        CheckAndSwapBoundCornersInt(&x1, &y1, &x2, &y2);
 
-    if ((x2 < 0) || (x1 >= buf_w) || (y2 < 0) || (y1 >= buf_h))
-        return;
+        if ((x2 < 0) || (x1 >= buf_w) || (y2 < 0) || (y1 >= buf_h))
+            return;
 
-    if (x1 < 0) x1 = 0;
-    if (y1 < 0) y1 = 0;
-    if (x2 >= buf_w) x2 = buf_w - 1;
-    if (y2 >= buf_h) y2 = buf_h - 1;
+        if (x1 < 0) x1 = 0;
+        if (y1 < 0) y1 = 0;
+        if (x2 >= buf_w) x2 = buf_w - 1;
+        if (y2 >= buf_h) y2 = buf_h - 1;
+    }
+    else
+    {
+        x1 = 0;
+        y1 = 0;
+        x2 = buf_w - 1;
+        y2 = buf_h - 1;
+    }
 
     bool x1x2_same = (x1 == x2);
     bool y1y2_same = (y1 == y2);
@@ -571,24 +865,37 @@ void SWRender_FillRing(SWRenderBuffer *buffer, SWRenderVec2F center, float radiu
     }
 }
 
-void SWRender_FillRectRounded(SWRenderBuffer *buffer, const SWRenderBoundF pos, float corner_radius, SWRenderColor color)
+void SWRender_FillRectRounded(SWRenderBuffer *buffer, const SWRenderBoundF *bounds, float corner_radius, SWRenderColor color)
 {
     if (!SWRender_CheckBuffer(buffer))
         return;
     
-    float x1_orig = pos.x1;
-    float y1_orig = pos.y1;
-    float x2_orig = pos.x2;
-    float y2_orig = pos.y2;
-    CheckAndSwapBoundCornersFloat(&x1_orig, &y1_orig, &x2_orig, &y2_orig);
+    float x1_orig, x2_orig;
+    float y1_orig, y2_orig;
 
     int buf_w = buffer->w;
     int buf_h = buffer->h;
+    
+    if (bounds)
+    {
+        x1_orig = bounds->x1;
+        y1_orig = bounds->y1;
+        x2_orig = bounds->x2;
+        y2_orig = bounds->y2;
+        CheckAndSwapBoundCornersFloat(&x1_orig, &y1_orig, &x2_orig, &y2_orig);
 
-    if ((x1_orig >= buf_w) || (y1_orig >= buf_h))
-        return;
-    if ((x2_orig < 0.0F) || (y2_orig < 0.0F))
-        return;
+        if ((x1_orig >= buf_w) || (y1_orig >= buf_h))
+            return;
+        if ((x2_orig < 0.0F) || (y2_orig < 0.0F))
+            return;
+    }
+    else
+    {
+        x1_orig = 0.0F;
+        y1_orig = 0.0F;
+        x2_orig = buffer->w;
+        y2_orig = buffer->h;
+    }
 
     // rectangle sizes
     float rect_w = x2_orig - x1_orig;
@@ -668,8 +975,9 @@ void SWRender_FillRectRounded(SWRenderBuffer *buffer, const SWRenderBoundF pos, 
 
     // draw
     //     1. ul corner ->  top rect   -> ur corner
-    //     2.    ->        middle rect       ->
+    //     2. ------------ middle rect ------------
     //     3. dl corner -> bottom rect -> dr corner
+    //
     //              divided into 7 parts
     // adjusted sequence to 1 -> 3 -> 2 to reuse variables
 
@@ -735,7 +1043,7 @@ void SWRender_FillRectRounded(SWRenderBuffer *buffer, const SWRenderBoundF pos, 
 
     // 1.3.2 top solid part
     if ((x_start <= x_end) && (y_start <= y_end))
-        SWRender_FillRect(buffer, (SWRenderBoundI){ x_start, y_start, x_end, y_end }, color, false);
+        SWRender_FillRect(buffer, &(SWRenderBoundI){ x_start, y_start, x_end, y_end }, color, false);
 
     // 2.1 dl corner & 2.3 dr corner
     SWRender_FillCircle(buffer, (SWRenderVec2F){ corner_center_bounds.x1, corner_center_bounds.y2 + 1.0F }, corner_radius, &(SWRenderBoundI){ x1_final, y3_final, x2_final, y4_final }, color);
@@ -759,7 +1067,7 @@ void SWRender_FillRectRounded(SWRenderBuffer *buffer, const SWRenderBoundF pos, 
 
     // 2.3.2 bottom solid part
     if ((x_start <= x_end) && (y_start <= y_end))
-        SWRender_FillRect(buffer, (SWRenderBoundI){ x_start, y_start, x_end, y_end }, color, false);
+        SWRender_FillRect(buffer, &(SWRenderBoundI){ x_start, y_start, x_end, y_end }, color, false);
 
     // 3.1 middle
     x_start = x1_draw;
@@ -794,7 +1102,7 @@ void SWRender_FillRectRounded(SWRenderBuffer *buffer, const SWRenderBoundF pos, 
         }
 
         // 3.1.3 center
-        SWRender_FillRect(buffer, (SWRenderBoundI){ x_start, y_start, x_end, y_end }, color, false);
+        SWRender_FillRect(buffer, &(SWRenderBoundI){ x_start, y_start, x_end, y_end }, color, false);
     }
 }
 

@@ -100,36 +100,62 @@ extern "C"
 {
 #endif
 
+    // pointer
     extern SWRenderColor *SWRender_GetPointerByPosition(const SWRenderBuffer *buffer, int x, int y);
     extern SWRenderColor *SWRender_GetPointerNextLine(const SWRenderBuffer *buffer, SWRenderColor *ptr);
 
+    // bounds
     extern void SWRender_CheckAndSwapBoundCornersInt(SWRenderBoundI *bounds);
     extern void SWRender_CheckAndSwapBoundCornersFloat(SWRenderBoundF *bounds);
     
-    extern bool SWRender_GetIntersectionBetweenBoundI(const SWRenderBoundI *bound_1, const SWRenderBoundI *bound_2, SWRenderBoundI *out_intersection);
-    extern SWRenderBoundI SWRender_RectToBoundI(const SWRenderRectI rect);
-    extern SWRenderBoundF SWRender_RectToBoundF(const SWRenderRectF rect);
+    extern bool SWRender_GetIntersectionBetweenBoundInt(const SWRenderBoundI *bound_1, const SWRenderBoundI *bound_2, SWRenderBoundI *out_intersection);
+    extern bool SWRender_GetIntersectionBetweenBoundFloat(const SWRenderBoundF *bound_1, const SWRenderBoundF *bound_2, SWRenderBoundF *out_intersection);
+    extern void SWRender_IncludeBoundToBoundInt(SWRenderBoundI *dst, const SWRenderBoundI *bounds);
+    extern void SWRender_IncludeBoundToBoundFloat(SWRenderBoundF *dst, const SWRenderBoundF *bounds);
 
+    // rect <-> bounds
+    extern bool SWRender_RectToBoundInt(SWRenderBoundI *bounds, const SWRenderRectI *rect);
+    extern bool SWRender_RectToBoundFloat(SWRenderBoundF *bounds, const SWRenderRectF *rect);
+    extern bool SWRender_BoundToRectInt(SWRenderRectI *rect, const SWRenderBoundI *bounds);
+    extern bool SWRender_BoundToRectFloat(SWRenderRectF *rect, const SWRenderBoundF *bounds);
+
+    // vector
     extern float SWRender_Vec2FLen(SWRenderVec2F vec);
     extern float SWRender_DistPtLineSeg(SWRenderVec2F point, const SWRenderBoundF *line);
 
-    extern void SWRender_AlphaBlendRGBA8888(SWRenderColor src, SWRenderColor *dst);
+    // vector between rect/bounds
+    extern bool SWRender_IsVec2IInsideBoundI(const SWRenderVec2I vector, const SWRenderBoundI *bounds);
+    extern bool SWRender_IsVec2FInsideBoundF(const SWRenderVec2F vector, const SWRenderBoundF *bounds);
+    extern bool SWRender_IsVec2IInsideRectI(const SWRenderVec2I vector, const SWRenderRectI *rect);
+    extern bool SWRender_IsVec2FInsideRectF(const SWRenderVec2F vector, const SWRenderRectF *rect);
 
+    // buffer
     extern bool SWRender_CheckBuffer(const SWRenderBuffer *buffer);
 
     extern bool SWRender_BufferAlloc(SWRenderBuffer *buffer);
     extern void SWRender_BufferFree(SWRenderBuffer *buffer);
 
+    extern bool SWRender_BufferGetRect(SWRenderRectI *rect, const SWRenderBuffer *buffer);
+    extern bool SWRender_BufferGetBounds(SWRenderBoundI *bounds, const SWRenderBuffer *buffer);
+    extern bool SWRender_BufferCrop(SWRenderBuffer *dst, const SWRenderBuffer *src, const SWRenderBoundI *bounds);
+
+    // pixel
+    extern void SWRender_AlphaBlendRGBA8888(SWRenderColor src, SWRenderColor *dst);
+
+    // pixel (not implemented yet)
     extern void SWRender_SetPixel(SWRenderBuffer *buffer, SWRenderVec2I pos, SWRenderColor color);
     extern void SWRender_BlendPixel(SWRenderBuffer *buffer, SWRenderVec2I pos, SWRenderColor color);
 
-    extern void SWRender_FillRect(SWRenderBuffer *buffer, const SWRenderBoundI pos, SWRenderColor color, bool overwrite);
+    // shapes
+    extern void SWRender_FillRect(SWRenderBuffer *buffer, const SWRenderBoundI *bounds, SWRenderColor color, bool overwrite);
     extern void SWRender_FillCircle(SWRenderBuffer *buffer, SWRenderVec2F center, float radius, const SWRenderBoundI *crop, SWRenderColor color);
     extern void SWRender_FillRing(SWRenderBuffer *buffer, SWRenderVec2F center, float radius, float thickness, const SWRenderBoundI *crop, SWRenderColor color);
-    extern void SWRender_FillRectRounded(SWRenderBuffer *buffer, const SWRenderBoundF pos, float corner_radius, SWRenderColor color);
+    extern void SWRender_FillRectRounded(SWRenderBuffer *buffer, const SWRenderBoundF *bounds, float corner_radius, SWRenderColor color);
 
+    // line
     extern void SWRender_Line(SWRenderBuffer *buffer, const SWRenderBoundF *line_pos, SWRenderColor color, float thickness);
 
+    // copy
     extern void SWRender_CopyBuffer(const SWRenderBuffer *src, const SWRenderBoundI *src_crop, SWRenderBuffer *dst, const SWRenderVec2I dst_pos_up_left);
     extern void SWRender_CopyBufferScaled(const SWRenderBuffer *src, const SWRenderBoundI *src_crop, SWRenderBuffer *dst, const SWRenderBoundI *dst_pos);
 
