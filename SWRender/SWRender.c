@@ -272,7 +272,7 @@ SWRenderColor *SWRender_GetPointerByPosition(const SWRenderBuffer *buffer, int x
     return SWRender_GetPointerByPositionInternal((SWRenderColor *)buffer->data, buffer->linesize, x, y);
 }
 
-SWRenderColor *SWRendet_GetPointerNextLine(const SWRenderBuffer *buffer, SWRenderColor *ptr)
+SWRenderColor *SWRender_GetPointerNextLine(const SWRenderBuffer *buffer, SWRenderColor *ptr)
 {
     if (!SWRender_CheckBuffer(buffer))
         return NULL;

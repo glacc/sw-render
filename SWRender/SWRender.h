@@ -101,7 +101,7 @@ extern "C"
 #endif
 
     extern SWRenderColor *SWRender_GetPointerByPosition(const SWRenderBuffer *buffer, int x, int y);
-    extern SWRenderColor *SWRendet_GetPointerNextLine(const SWRenderBuffer *buffer, SWRenderColor *ptr);
+    extern SWRenderColor *SWRender_GetPointerNextLine(const SWRenderBuffer *buffer, SWRenderColor *ptr);
 
     extern void SWRender_CheckAndSwapBoundCornersInt(SWRenderBoundI *bounds);
     extern void SWRender_CheckAndSwapBoundCornersFloat(SWRenderBoundF *bounds);
