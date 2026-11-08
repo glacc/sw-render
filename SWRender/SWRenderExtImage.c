@@ -24,6 +24,7 @@
 #include <libavcodec/avcodec.h>
 #include <libswscale/swscale.h>
 #include <libavutil/imgutils.h>
+#include <libavutil/opt.h>
 
 #include <string.h>
 
@@ -164,19 +165,19 @@ static int OpenAndDecodeInput(AVFormatContext *fmt_ctx, SWRenderBuffer *buffer)
         goto end;
     }
 
+    // svg parameters
+    if (codec_id == AV_CODEC_ID_SVG)
+    {
+        av_opt_set_int(codec_ctx->priv_data, "width",  buffer->w, 0);
+        av_opt_set_int(codec_ctx->priv_data, "height", buffer->h, 0);
+        av_opt_set_int(codec_ctx->priv_data, "keep_ar", 1, 0);
+    }
+
     if (avcodec_parameters_to_context(codec_ctx, first_video_stream_codec_para) < 0)
     {
         fprintf(stderr, LOCATION_PREFIX_STR "avcodec_parameters_to_context failed.\n");
         ret = -1;
         goto end;
-    }
-
-    // svg parameters
-    if (codec_id == AV_CODEC_ID_SVG)
-    {
-        av_dict_set_int(codec_ctx->priv_data, "width",  buffer->w, 0);
-        av_dict_set_int(codec_ctx->priv_data, "height", buffer->h, 0);
-        av_dict_set_int(codec_ctx->priv_data, "keep_ar", 1, 0);
     }
 
     if (avcodec_open2(codec_ctx, first_video_stream_codec, NULL) < 0)
