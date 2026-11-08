@@ -450,6 +450,10 @@ void SWRender_AlphaBlendRGBA8888(SWRenderColor src, SWRenderColor *dst)
     uint32_t g_new = ((g_src * a_src_mul_255) + (g_dst * a_inv)) / a_div;
     uint32_t b_new = ((b_src * a_src_mul_255) + (b_dst * a_inv)) / a_div;
 
+    if (r_new > 255) r_new = 255;
+    if (g_new > 255) g_new = 255;
+    if (b_new > 255) b_new = 255;
+
     dst->r = r_new;
     dst->g = g_new;
     dst->b = b_new;

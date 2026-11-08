@@ -26,6 +26,10 @@
 
 #define SWRENDER_IMG_AVIO_BUF_SIZE 4096
 
+#ifndef SWRENDER_EXTIMAGE_AVPIXFMT
+#define SWRENDER_EXTIMAGE_AVPIXFMT AV_PIX_FMT_RGBA
+#endif
+
 #ifdef __cplusplus
 extern "C"
 {

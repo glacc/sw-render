@@ -120,6 +120,7 @@ static int OpenAndDecodeInput(AVFormatContext *fmt_ctx, SWRenderBuffer *buffer)
     int first_video_stream_index = -1;
     AVCodecParameters *first_video_stream_codec_para = NULL;
     const AVCodec *first_video_stream_codec = NULL;
+    enum AVCodecID codec_id = AV_CODEC_ID_FIRST_UNKNOWN;
 
     avformat_find_stream_info(fmt_ctx, NULL);
     for (int i = 0; i < fmt_ctx->nb_streams; i++)
@@ -128,7 +129,7 @@ static int OpenAndDecodeInput(AVFormatContext *fmt_ctx, SWRenderBuffer *buffer)
         // printf(LOCATION_PREFIX_STR "stream index %d, id %d, frames %ld\n", stream_current->index, stream_current->id, stream_current->nb_frames);
 
         AVCodecParameters *codec_para = stream_current->codecpar;
-        const AVCodec *codec = avcodec_find_decoder(codec_para->codec_id);
+        const AVCodec *codec = avcodec_find_decoder(codec_id = codec_para->codec_id);
         if (!codec)
         {
             fprintf(stderr, LOCATION_PREFIX_STR "avcodec_find_decoder failed for stream at index %d.\n", stream_current->index);
@@ -169,6 +170,15 @@ static int OpenAndDecodeInput(AVFormatContext *fmt_ctx, SWRenderBuffer *buffer)
         ret = -1;
         goto end;
     }
+
+    // svg parameters
+    if (codec_id == AV_CODEC_ID_SVG)
+    {
+        av_dict_set_int(codec_ctx->priv_data, "width",  buffer->w, 0);
+        av_dict_set_int(codec_ctx->priv_data, "height", buffer->h, 0);
+        av_dict_set_int(codec_ctx->priv_data, "keep_ar", 1, 0);
+    }
+
     if (avcodec_open2(codec_ctx, first_video_stream_codec, NULL) < 0)
     {
         fprintf(stderr, LOCATION_PREFIX_STR "avcodec_open2 failed.\n");
@@ -212,7 +222,7 @@ static int OpenAndDecodeInput(AVFormatContext *fmt_ctx, SWRenderBuffer *buffer)
                 buffer->w = frame->width;
                 buffer->h = frame->height;
 
-                struct SwsContext *sws_ctx = sws_getContext(frame->width, frame->height, frame->format, buffer->w, buffer->h, AV_PIX_FMT_RGBA, SWS_LANCZOS, NULL, NULL, NULL);
+                struct SwsContext *sws_ctx = sws_getContext(frame->width, frame->height, frame->format, buffer->w, buffer->h, SWRENDER_EXTIMAGE_AVPIXFMT, SWS_LANCZOS, NULL, NULL, NULL);
                 if (sws_ctx)
                 {
                     // dst buffer allocation
