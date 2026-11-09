@@ -132,7 +132,7 @@ FT_F26Dot6 FTRender_LoadAndRenderGlyph(FTEssentials_State *state, SWRenderBuffer
     return slot->advance.x;
 }
 
-void FTRender_RenderStr(FTEssentials_State *state, SWRenderBuffer *surface, FT_F26Dot6 x, FT_F26Dot6 y, const char *str, SWRenderColor color)
+void FTRender_RenderStr(FTEssentials_State *state, SWRenderBuffer *surface, FT_F26Dot6 x, FT_F26Dot6 y, const char *str, size_t size, SWRenderColor color)
 {
     FT_Face face = state->ft_face;
 
@@ -146,11 +146,17 @@ void FTRender_RenderStr(FTEssentials_State *state, SWRenderBuffer *surface, FT_F
 
     bool has_kerning = FT_HAS_KERNING(state->ft_face);
 
+    size_t bytes = 0;
+
     while (*str != '\0')
     {
         int char_len;
 
         FT_ULong charcode = FTEssentials_GetUTF32FromCharPtr((const unsigned char *)str, &char_len);
+
+        bytes += char_len;
+        if (bytes >= size)
+            break;
 
         /* newline detection & ptr advance */
         bool newline = false;
@@ -197,7 +203,7 @@ void FTRender_RenderStr(FTEssentials_State *state, SWRenderBuffer *surface, FT_F
     }
 }
 
-void FTRender_RenderStrWithAlign(FTEssentials_State *state, SWRenderBuffer *surface, FT_F26Dot6 origin_x, FT_F26Dot6 origin_y, const char *str, int8_t align_horz, int8_t align_vert, SWRenderColor color)
+void FTRender_RenderStrWithAlign(FTEssentials_State *state, SWRenderBuffer *surface, FT_F26Dot6 origin_x, FT_F26Dot6 origin_y, const char *str, size_t size, int8_t align_horz, int8_t align_vert, SWRenderColor color)
 {
     FT_F26Dot6 offset_x, offset_y;
     FTEssentials_CalcRenderOffsetByAlignment(state, str, align_horz, align_vert, &offset_x, &offset_y, false);
@@ -205,7 +211,7 @@ void FTRender_RenderStrWithAlign(FTEssentials_State *state, SWRenderBuffer *surf
     FT_F26Dot6 new_x = origin_x + offset_x;
     FT_F26Dot6 new_y = origin_y + offset_y;
 
-    FTRender_RenderStr(state, surface, new_x, new_y, str, color);
+    FTRender_RenderStr(state, surface, new_x, new_y, str, size, color);
 }
 
 void FTRender_RenderCharHorizontallyCentered(FTEssentials_State *state, SWRenderBuffer *surface, FT_F26Dot6 x, FT_F26Dot6 y, FT_ULong charcode, SWRenderColor color)
@@ -223,7 +229,7 @@ void FTRender_RenderCharHorizontallyCentered(FTEssentials_State *state, SWRender
     FTRender_RenderGlyphToSurface(bitmap, surface, x_render, y_render, color);
 }
 
-void FTRender_RenderStrFixedAdvance(FTEssentials_State *state, SWRenderBuffer *surface, FT_F26Dot6 x, FT_F26Dot6 y, const char *str, SWRenderColor color)
+void FTRender_RenderStrFixedAdvance(FTEssentials_State *state, SWRenderBuffer *surface, FT_F26Dot6 x, FT_F26Dot6 y, const char *str, size_t size, SWRenderColor color)
 {
     FT_Face face = state->ft_face;
 
@@ -233,11 +239,17 @@ void FTRender_RenderStrFixedAdvance(FTEssentials_State *state, SWRenderBuffer *s
 
     FT_F26Dot6 advance_fixed = state->ft_face->size->metrics.max_advance;
 
+    size_t bytes = 0;
+
     while (*str != '\0')
     {
         int char_len;
 
         FT_ULong charcode = FTEssentials_GetUTF32FromCharPtr((const unsigned char *)str, &char_len);
+        
+        bytes += char_len;
+        if (bytes >= size)
+            break;
 
         /* newline detection & ptr advance */
         bool newline = false;
@@ -269,7 +281,7 @@ void FTRender_RenderStrFixedAdvance(FTEssentials_State *state, SWRenderBuffer *s
     }
 }
 
-void FTRender_RenderStrFixedAdvanceWithAlign(FTEssentials_State *state, SWRenderBuffer *surface, FT_F26Dot6 origin_x, FT_F26Dot6 origin_y, const char *str, int8_t align_horz, int8_t align_vert, SWRenderColor color)
+void FTRender_RenderStrFixedAdvanceWithAlign(FTEssentials_State *state, SWRenderBuffer *surface, FT_F26Dot6 origin_x, FT_F26Dot6 origin_y, const char *str, size_t size, int8_t align_horz, int8_t align_vert, SWRenderColor color)
 {
     FT_F26Dot6 offset_x, offset_y;
     FTEssentials_CalcRenderOffsetByAlignment(state, str, align_horz, align_vert, &offset_x, &offset_y, true);
@@ -277,5 +289,5 @@ void FTRender_RenderStrFixedAdvanceWithAlign(FTEssentials_State *state, SWRender
     FT_F26Dot6 new_x = origin_x + offset_x;
     FT_F26Dot6 new_y = origin_y + offset_y;
 
-    FTRender_RenderStrFixedAdvance(state, surface, new_x, new_y, str, color);
+    FTRender_RenderStrFixedAdvance(state, surface, new_x, new_y, str, size, color);
 }

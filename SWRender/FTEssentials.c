@@ -22,6 +22,7 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+#include <stddef.h>
 
 bool FTEssentials_InitState(FTEssentials_State *state, const char *fontpath)
 {
@@ -117,6 +118,26 @@ FT_ULong FTEssentials_GetUTF32FromCharPtr(const unsigned char *ptr_char, int *ch
     return (FT_ULong)charcode;
 }
 
+bool FTEssentials_IsWhiteSpace(FT_ULong character)
+{
+    if (character >= 0x0009 && character <= 0x000D)
+        return true;
+    if (character == 0x0020 ||
+        character == 0x0085 ||
+        character == 0x00A0 ||
+        character == 0x1680)
+        return true;
+    if (character >= 0x2000 && character <= 0x200A)
+        return true;
+    if (character == 0x2028 ||
+        character == 0x2029 ||
+        character == 0x202F ||
+        character == 0x205F ||
+        character == 0x3000)
+        return true;
+    return false;
+}
+
 bool FTEssentials_LoadGlyph(FTEssentials_State *state, FT_ULong charcode)
 {
     FT_Error error;
@@ -178,7 +199,7 @@ void FTEssentials_GetStrBounds(FTEssentials_State *state, const char *str, FT_F2
 
     FT_F26Dot6 linespace = (FT_F26Dot6)((float)(face->size->metrics.ascender - face->size->metrics.descender) * state->linespace_multiplier);
 
-    while (*str != 0)
+    while (*str)
     {
         int char_len;
 

@@ -35,9 +35,13 @@ extern "C"
 {
 #endif
 
+    // load/save image using ffmpeg libraries
     extern int SWRender_LoadImageFromFileToBuffer(const char *filepath, SWRenderBuffer *buffer);
     extern int SWRender_LoadImageFromMemoryToBuffer(const uint8_t *src, const size_t size, SWRenderBuffer *buffer);
     extern int SWRender_SaveImageFromBuffer(SWRenderBuffer *buffer, const char *filepath, enum AVCodecID codec_id);
+
+    // copy buffer scaled using swscale
+    extern int SWRender_CopyScaledSWScale(const SWRenderBuffer *src, const SWRenderBoundI *src_crop, SWRenderBuffer *dst, const SWRenderBoundI *dst_pos);
 
 #ifdef __cplusplus
 }

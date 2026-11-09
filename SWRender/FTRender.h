@@ -35,13 +35,13 @@ extern "C"
 
     FT_F26Dot6 FTRender_LoadAndRenderGlyph(FTEssentials_State *state, SWRenderBuffer *buffer, int x, int y, FT_ULong charcode, SWRenderColor color);
 
-    extern void FTRender_RenderStr(FTEssentials_State *state, SWRenderBuffer *buffer, FT_F26Dot6 x, FT_F26Dot6 y, const char *str, SWRenderColor color);
-    extern void FTRender_RenderStrWithAlign(FTEssentials_State *state, SWRenderBuffer *buffer, FT_F26Dot6 origin_x, FT_F26Dot6 origin_y, const char *str, int8_t align_horz, int8_t align_vert, SWRenderColor color);
+    extern void FTRender_RenderStr(FTEssentials_State *state, SWRenderBuffer *buffer, FT_F26Dot6 x, FT_F26Dot6 y, const char *str, size_t size, SWRenderColor color);
+    extern void FTRender_RenderStrWithAlign(FTEssentials_State *state, SWRenderBuffer *buffer, FT_F26Dot6 origin_x, FT_F26Dot6 origin_y, const char *str, size_t size, int8_t align_horz, int8_t align_vert, SWRenderColor color);
 
     extern void FTRender_RenderCharHorizontallyCentered(FTEssentials_State *state, SWRenderBuffer *buffer, FT_F26Dot6 x, FT_F26Dot6 y, FT_ULong charcode, SWRenderColor color);
 
-    extern void FTRender_RenderStrFixedAdvance(FTEssentials_State *state, SWRenderBuffer *buffer, FT_F26Dot6 x, FT_F26Dot6 y, const char *str, SWRenderColor color);
-    extern void FTRender_RenderStrFixedAdvanceWithAlign(FTEssentials_State *state, SWRenderBuffer *buffer, FT_F26Dot6 origin_x, FT_F26Dot6 origin_y, const char *str, int8_t align_horz, int8_t align_vert, SWRenderColor color);
+    extern void FTRender_RenderStrFixedAdvance(FTEssentials_State *state, SWRenderBuffer *buffer, FT_F26Dot6 x, FT_F26Dot6 y, const char *str, size_t size, SWRenderColor color);
+    extern void FTRender_RenderStrFixedAdvanceWithAlign(FTEssentials_State *state, SWRenderBuffer *buffer, FT_F26Dot6 origin_x, FT_F26Dot6 origin_y, const char *str, size_t size, int8_t align_horz, int8_t align_vert, SWRenderColor color);
 
 #ifdef __cplusplus
 }

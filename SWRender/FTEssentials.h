@@ -22,13 +22,14 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+#include <stddef.h>
 
 #include <ft2build.h>
 #include FT_FREETYPE_H
 
 #define INT_TO_F26DOT6(x)       ((x) << 6)
-#define FLOAT_TO_F26DOT6(x)     ((FT_F26Dot6)((x) * 64.0F))
-#define DOUBLE_TO_F26DOT6(x)    ((FT_F26Dot6)((x) * 64.0))
+#define FLOAT_TO_F26DOT6(x)     ((FT_F26Dot6)((x + 0.5F) * 64.0F))
+#define DOUBLE_TO_F26DOT6(x)    ((FT_F26Dot6)((x + 0.5) * 64.0))
 #define F26DOT6_TO_INT(x)       (((x) + (1 << 5)) >> 6)
 #define F26DOT6_TO_FLOAT(x)     ((float)(x) * (1.0F / 64.0F))
 #define F26DOT6_TO_DOUBLE(x)    ((double)(x) * (1.0 / 64.0))
@@ -53,6 +54,7 @@ extern "C"
     extern FT_ULong FTEssentials_GetUTF32FromCharPtr(const unsigned char *ptr_char, int *char_len_out);
 
     extern bool FTEssentials_LoadGlyph(FTEssentials_State *state, FT_ULong charcode);
+    extern bool FTEssentials_IsWhiteSpace(FT_ULong character);
 
     extern bool FTEssentials_RenderGlyph(FTEssentials_State *state, FT_ULong charcode);
 

@@ -22,7 +22,7 @@ FLAGS_RELEASE=("${FLAGS_ALL[@]}" -O2)
 FLAGS_DEFAULT=("${FLAGS_RELEASE[@]}")
 
 # settings - libraries
-LIBS=(freetype2 libavformat libavcodec libavutil libswscale)
+LIBS=(freetype2 libavformat libavcodec libavutil libswscale libunibreak)
 
 # settings - standards
 STD_C="c23"
