@@ -168,16 +168,26 @@ static char FTEssentialsWordWrap_GetTextBoundsInternal(
         else
             this_glyph_x2 = this_glyph_x1 + advance_x;
 
+        /*
         str  += char_len;
         brks += char_len;
 
         bytes += char_len;
+        */
 
-        if (this_glyph_x2 >= max_width)
-        {
+        if (this_glyph_x2 > max_width)
             overflow = true;
-            break;
+        
+        if (!overflow || (overflow && cursor_x == 0))
+        {
+            str  += char_len;
+            brks += char_len;
+
+            bytes += char_len;
         }
+        
+        if (overflow)
+            break;
 
         if (!(FTEssentials_IsWhiteSpace(charcode) && cursor_x == 0))
         {
@@ -194,7 +204,8 @@ static char FTEssentialsWordWrap_GetTextBoundsInternal(
         cursor_x += advance_x;
 
         if (brk == LINEBREAK_ALLOWBREAK ||
-            brk == LINEBREAK_MUSTBREAK)
+            brk == LINEBREAK_MUSTBREAK  ||
+            brk == LINEBREAK_INDETERMINATE)
             break;
     }
 
@@ -319,6 +330,11 @@ bool FTEssentialsWordWrap_GetLinesWidthLimited(FTEssentialsWordWrap_LineBuffer *
 
         bool overflow;
 
+        FT_F26Dot6 min_x = 0;
+        FT_F26Dot6 min_y = 0;
+        FT_F26Dot6 max_x = 0;
+        FT_F26Dot6 max_y = 0;
+
         char brk_curr = FTEssentialsWordWrap_GetTextBoundsInternal(
             state,
             ptr_str,
@@ -327,10 +343,10 @@ bool FTEssentialsWordWrap_GetLinesWidthLimited(FTEssentialsWordWrap_LineBuffer *
             cursor_x,
             max_width,
             fixed_advance,
-            &line_min_x,
-            &line_min_y,
-            &line_max_x,
-            &line_max_y,
+            &min_x,
+            &min_y,
+            &max_x,
+            &max_y,
             &advance_bytes,
             &last_charcode,
             &cursor_x,
@@ -349,6 +365,9 @@ bool FTEssentialsWordWrap_GetLinesWidthLimited(FTEssentialsWordWrap_LineBuffer *
         //  ALLOWBREAK  NOBREAK      -> false       true          //
         //  NOBREAK     NOBREAK      -> true        true          //
         //  X           MUSTBREAK    -> true        true          //
+
+        if (brk_curr == LINEBREAK_INDETERMINATE)
+            brk_curr = LINEBREAK_ALLOWBREAK;
         
         if (brk_curr == LINEBREAK_MUSTBREAK)
         {
@@ -379,6 +398,14 @@ bool FTEssentialsWordWrap_GetLinesWidthLimited(FTEssentialsWordWrap_LineBuffer *
         {
             advance   = false;
             linebreak = true;
+        }
+
+        if (advance)
+        {
+            line_min_x = min_x;
+            line_min_y = min_y;
+            line_max_x = max_x;
+            line_max_y = max_y;
         }
 
         brk_last = brk_curr;

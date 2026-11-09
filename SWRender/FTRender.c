@@ -150,13 +150,14 @@ void FTRender_RenderStr(FTEssentials_State *state, SWRenderBuffer *surface, FT_F
 
     while (*str != '\0')
     {
+        if (bytes >= size)
+            break;
+
         int char_len;
 
         FT_ULong charcode = FTEssentials_GetUTF32FromCharPtr((const unsigned char *)str, &char_len);
 
         bytes += char_len;
-        if (bytes >= size)
-            break;
 
         /* newline detection & ptr advance */
         bool newline = false;
@@ -243,13 +244,14 @@ void FTRender_RenderStrFixedAdvance(FTEssentials_State *state, SWRenderBuffer *s
 
     while (*str != '\0')
     {
+        if (bytes >= size)
+            break;
+        
         int char_len;
 
         FT_ULong charcode = FTEssentials_GetUTF32FromCharPtr((const unsigned char *)str, &char_len);
         
         bytes += char_len;
-        if (bytes >= size)
-            break;
 
         /* newline detection & ptr advance */
         bool newline = false;
