@@ -1025,59 +1025,68 @@ void SWRender_FillRectRounded(SWRenderBuffer *buffer, const SWRenderBoundF *boun
     if (y3_final == y2_final)
         y3_final++;
 
-    // 1.1 ul corner & 1.2 ur corner
-    SWRender_FillCircle(buffer, (SWRenderVec2F){ corner_center_bounds.x1, corner_center_bounds.y1 }, corner_radius, &(SWRenderBoundI){ x1_final, y1_final, x2_final, y2_final }, color);
-    SWRender_FillCircle(buffer, (SWRenderVec2F){ corner_center_bounds.x2 + 1.0F, corner_center_bounds.y1 }, corner_radius, &(SWRenderBoundI){ x3_final, y1_final, x4_final, y2_final }, color);
-    
-    // 1.3 top rect
-    y_start = y1_draw;
-    y_end   = y2_draw;
+    bool y2_draw_inside_buffer = (y2_draw >= 1);
+    bool y3_draw_inside_buffer = (y3_draw < buf_h - 1);
 
-    if (y1_draw == y1_final)
+    if (y2_draw_inside_buffer)
     {
-        // 1.3.1 anti-aliased top edge
-        SWRenderColor *ptr_pixel = SWRender_GetPointerByPositionInternal(data, linesize, x_start, y_start);
-        for (int x = x_start; x <= x_end; x++)
+        // 1.1 ul corner & 1.2 ur corner
+        SWRender_FillCircle(buffer, (SWRenderVec2F){ corner_center_bounds.x1, corner_center_bounds.y1 }, corner_radius, &(SWRenderBoundI){ x1_final, y1_final, x2_final, y2_final }, color);
+        SWRender_FillCircle(buffer, (SWRenderVec2F){ corner_center_bounds.x2 + 1.0F, corner_center_bounds.y1 }, corner_radius, &(SWRenderBoundI){ x3_final, y1_final, x4_final, y2_final }, color);
+        
+        // 1.3 top rect
+        y_start = y1_draw;
+        y_end   = y2_draw;
+
+        if (y1_draw == y1_final)
         {
-            SWRender_AlphaBlendRGBA8888(color_u_edge, ptr_pixel);
-            ptr_pixel++;
+            // 1.3.1 anti-aliased top edge
+            SWRenderColor *ptr_pixel = SWRender_GetPointerByPositionInternal(data, linesize, x_start, y_start);
+            for (int x = x_start; x <= x_end; x++)
+            {
+                SWRender_AlphaBlendRGBA8888(color_u_edge, ptr_pixel);
+                ptr_pixel++;
+            }
+            y_start++;
         }
-        y_start++;
+
+        // 1.3.2 top solid part
+        if ((x_start <= x_end) && (y_start <= y_end))
+            SWRender_FillRect(buffer, &(SWRenderBoundI){ x_start, y_start, x_end, y_end }, color, false);
     }
 
-    // 1.3.2 top solid part
-    if ((x_start <= x_end) && (y_start <= y_end))
-        SWRender_FillRect(buffer, &(SWRenderBoundI){ x_start, y_start, x_end, y_end }, color, false);
-
-    // 2.1 dl corner & 2.3 dr corner
-    SWRender_FillCircle(buffer, (SWRenderVec2F){ corner_center_bounds.x1, corner_center_bounds.y2 + 1.0F }, corner_radius, &(SWRenderBoundI){ x1_final, y3_final, x2_final, y4_final }, color);
-    SWRender_FillCircle(buffer, (SWRenderVec2F){ corner_center_bounds.x2 + 1.0F, corner_center_bounds.y2 + 1.0F }, corner_radius, &(SWRenderBoundI){ x3_final, y3_final, x4_final, y4_final }, color);
-
-    // 2.3 bottom rect
-    y_start = y3_draw;
-    y_end   = y4_draw;
-
-    if (y4_draw == y4_final)
+    if (y3_draw_inside_buffer)
     {
-        // 2.3.1 anti-aliased top edge
-        SWRenderColor *ptr_pixel = SWRender_GetPointerByPositionInternal(data, linesize, x_start, y_end);
-        for (int x = x_start; x <= x_end; x++)
-        {
-            SWRender_AlphaBlendRGBA8888(color_d_edge, ptr_pixel);
-            ptr_pixel++;
-        }
-        y_end--;
-    }
+        // 2.1 dl corner & 2.3 dr corner
+        SWRender_FillCircle(buffer, (SWRenderVec2F){ corner_center_bounds.x1, corner_center_bounds.y2 + 1.0F }, corner_radius, &(SWRenderBoundI){ x1_final, y3_final, x2_final, y4_final }, color);
+        SWRender_FillCircle(buffer, (SWRenderVec2F){ corner_center_bounds.x2 + 1.0F, corner_center_bounds.y2 + 1.0F }, corner_radius, &(SWRenderBoundI){ x3_final, y3_final, x4_final, y4_final }, color);
 
-    // 2.3.2 bottom solid part
-    if ((x_start <= x_end) && (y_start <= y_end))
-        SWRender_FillRect(buffer, &(SWRenderBoundI){ x_start, y_start, x_end, y_end }, color, false);
+        // 2.3 bottom rect
+        y_start = y3_draw;
+        y_end   = y4_draw;
+
+        if (y4_draw == y4_final)
+        {
+            // 2.3.1 anti-aliased top edge
+            SWRenderColor *ptr_pixel = SWRender_GetPointerByPositionInternal(data, linesize, x_start, y_end);
+            for (int x = x_start; x <= x_end; x++)
+            {
+                SWRender_AlphaBlendRGBA8888(color_d_edge, ptr_pixel);
+                ptr_pixel++;
+            }
+            y_end--;
+        }
+
+        // 2.3.2 bottom solid part
+        if ((x_start <= x_end) && (y_start <= y_end))
+            SWRender_FillRect(buffer, &(SWRenderBoundI){ x_start, y_start, x_end, y_end }, color, false);
+    }
 
     // 3.1 middle
     x_start = x1_draw;
     x_end   = x4_draw;
-    y_start = y2_draw + 1;
-    y_end   = y3_draw - 1;
+    y_start = y2_draw_inside_buffer ? (y2_draw + 1) : y2_draw;
+    y_end   = y3_draw_inside_buffer ? (y3_draw - 1) : y3_draw;
 
     if (y_start <= y_end)
     {
