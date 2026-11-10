@@ -40,8 +40,8 @@ extern "C"
     extern int SWRender_LoadImageFromMemoryToBuffer(const uint8_t *src, const size_t size, SWRenderBuffer *buffer);
     extern int SWRender_SaveImageFromBuffer(SWRenderBuffer *buffer, const char *filepath, enum AVCodecID codec_id);
 
-    // copy buffer scaled using swscale
-    extern int SWRender_CopyScaledSWScale(const SWRenderBuffer *src, const SWRenderBoundI *src_crop, SWRenderBuffer *dst, const SWRenderBoundI *dst_pos);
+    // duplicate buffer scaled using swscale
+    extern bool SWRender_DupSWScaledToBuffer(const SWRenderBuffer *src, SWRenderBuffer *dst);
 
 #ifdef __cplusplus
 }

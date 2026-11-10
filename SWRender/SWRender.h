@@ -52,6 +52,15 @@ __attribute__((packed)) SWRenderColor;
 
 typedef struct
 {
+    float r;
+    float g;
+    float b;
+    float a;
+}
+__attribute__((packed)) SWRenderColorF;
+
+typedef struct
+{
     int x, y, w, h;
 }
 SWRenderRectI;
@@ -99,6 +108,10 @@ SWRenderBuffer;
 extern "C"
 {
 #endif
+
+    // color
+    extern SWRenderColorF SWRender_ColorToColorF(SWRenderColor color);
+    extern SWRenderColorF SWRender_ColorInterpolation(SWRenderColorF src, SWRenderColorF dst, float progress);
 
     // pointer
     extern SWRenderColor *SWRender_GetPointerByPosition(const SWRenderBuffer *buffer, int x, int y);

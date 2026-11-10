@@ -27,7 +27,7 @@
 #include "SWRender/SWRender.h"
 #include "SWRender/SWRenderExtImage.h"
 #include "SWRender/FTEssentials.h"
-#include "SWRender/FTEssentialsWordWrap.h"
+#include "SWRender/FTWordWrap.h"
 #include "SWRender/FTRender.h"
 #include "SWRender/FTRenderWordWrap.h"
 
@@ -77,7 +77,7 @@ static int TestWordWrap()
     int ret = 0;
 
     FTEssentials_State ft_state = { };
-    FTEssentialsWordWrap_LineBuffer line_buffer = { };
+    FTWordWrapLineBuffer line_buffer = { };
     SWRenderBuffer buffer = { 2048, 2048, NULL, 0 };
 
     ft_state.linespace_multiplier = 1.0F;
@@ -89,7 +89,7 @@ static int TestWordWrap()
         goto end;
     }
 
-    if (!FTEssentialsWordWrap_LineBufferInit(&line_buffer))
+    if (!FTWordWrapLineBuffer_Init(&line_buffer))
     {
         fprintf(stderr, LOCATION_PREFIX_STR "line_buffer mem alloc failed.\n");
         ret = -1;
@@ -124,7 +124,7 @@ static int TestWordWrap()
     SWRender_SaveImageFromBuffer(&buffer, "./test-word-wrap.png", AV_CODEC_ID_PNG);
     
 end:
-    FTEssentialsWordWrap_LineBufferCleanup(&line_buffer);
+    FTWordWrapLineBuffer_Cleanup(&line_buffer);
     FTEssentials_Done(&ft_state);
     SWRender_BufferFree(&buffer);
 

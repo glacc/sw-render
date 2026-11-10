@@ -29,6 +29,28 @@
 #define __LOG_FILE__ "SWRenderExt.c"
 #include "MacroLog.h"
 
+SWRenderColorF SWRender_ColorToColorF(SWRenderColor color)
+{
+    return (SWRenderColorF)
+    {
+        color.r,
+        color.g,
+        color.b,
+        color.a,
+    };
+}
+
+SWRenderColorF SWRender_ColorInterpolation(SWRenderColorF src, SWRenderColorF dst, float progress)
+{
+    return (SWRenderColorF)
+    {
+        src.r + ((dst.r - src.r) * progress),
+        src.g + ((dst.g - src.g) * progress),
+        src.b + ((dst.b - src.b) * progress),
+        src.a + ((dst.a - src.a) * progress),
+    };
+}
+
 #pragma region Pointer
 
 static inline SWRenderColor *SWRender_GetPointerByPositionInternal(SWRenderColor *data, int linesize, int x, int y)
@@ -476,7 +498,7 @@ bool SWRender_CheckBuffer(const SWRenderBuffer *buffer)
 bool SWRender_BufferAlloc(SWRenderBuffer *buffer)
 {
     if (!buffer)
-        return -1;
+        return false;
     
     int w = buffer->w;
     int h = buffer->h;
@@ -1644,6 +1666,175 @@ void SWRender_CopyBufferScaled(const SWRenderBuffer *src, const SWRenderBoundI *
 
         ptr_dst_row_start = (SWRenderColor *)((uint8_t *)ptr_dst_row_start + linesize_dst);
     }
+
+#if 0
+    // crap hq mode code.
+
+    if (!hq)
+    {
+        // nearest
+        for (int y = draw_y1; y <= draw_y2; y++)
+        {
+            float progress_y = (y - dst_y1) / (float)dst_y1y2_dist;
+            if (vert_flipped) progress_y = 1.0F - progress_y;
+
+            int src_y = (int)((src_y1 + ((src_y2 - src_y1) * progress_y)) + 0.5F);
+            if (src_y < 0) src_y = 0;
+            if (src_y > src_y_max) src_y = src_y_max;
+
+            SWRenderColor *ptr_src_row_start = (SWRenderColor *)((uint8_t *)src->data + (linesize_src * src_y));
+            SWRenderColor *ptr_dst_pixel = ptr_dst_row_start;
+
+            for (int x = draw_x1; x <= draw_x2; x++)
+            {
+                float progress_x = (x - dst_x1) / (float)dst_x1x2_dist;
+                if (horz_flipped) progress_x = 1.0F - progress_x;
+
+                int src_x = (int)((src_x1 + ((src_x2 - src_x1) * progress_x)) + 0.5F);
+                if (src_x < 0) src_x = 0;
+                if (src_x >= src_x_max) src_x = src_x_max;
+
+                SWRender_AlphaBlendRGBA8888(ptr_src_row_start[src_x], ptr_dst_pixel);
+
+                ptr_dst_pixel++;
+            }
+
+            ptr_dst_row_start = (SWRenderColor *)((uint8_t *)ptr_dst_row_start + linesize_dst);
+        }
+
+        return;
+    }
+
+    // hq:
+    // per axis:
+    //  scale < 1   average
+    //  scale >= 1  linear
+    for (int y_curr = draw_y1; y_curr <= draw_y2; y_curr++)
+    {
+        float y_next = y_curr + 1;
+
+        float progress_y_curr = (y_curr - dst_y1) / (float)dst_y1y2_dist;
+        float progress_y_next = (y_next - dst_y1) / (float)dst_y1y2_dist;
+        if (vert_flipped)
+        {
+            progress_y_curr = 1.0F - progress_y_curr;
+            progress_y_next = 1.0F - progress_y_next;
+        }
+
+        float src_y_curr = ((src_y1 + ((src_y2 - src_y1) * progress_y_curr)) + 0.5F);
+        float src_y_next = ((src_y1 + ((src_y2 - src_y1) * progress_y_next)) + 0.5F);
+        int src_y_curr_int = (int)src_y_curr;
+        int src_y_next_int = (int)src_y_next;
+        if (src_y_curr_int < 0) src_y_curr_int = 0;
+        if (src_y_next_int < 0) src_y_next_int = 0;
+        if (src_y_curr_int > src_y_max) src_y_curr_int = src_y_max;
+        if (src_y_next_int > src_y_max) src_y_next_int = src_y_max;
+
+        bool y_linear_interpolation = (!vert_flipped) ? (src_y_curr_int + 1 >= src_y_next_int) : (src_y_curr_int - 1 <= src_y_next_int);
+        if (y_linear_interpolation)
+        {
+            if (!vert_flipped)
+                src_y_next_int = src_y_curr_int + ((src_y_curr_int < src_y_max) ? 1 : 0);
+            else
+                src_y_next_int = src_y_curr_int - ((src_y_curr_int > 0) ? 1 : 0);
+        }
+
+        SWRenderColor *ptr_src_row_start = (SWRenderColor *)((uint8_t *)src->data + (linesize_src * src_y_curr_int));
+
+        SWRenderColor *ptr_dst_pixel = ptr_dst_row_start;
+
+        for (int x_curr = draw_x1; x_curr <= draw_x2; x_curr++)
+        {
+            float x_next = x_curr + 1;
+            
+            float progress_x_curr = (x_curr - dst_x1) / (float)dst_x1x2_dist;
+            float progress_x_next = (x_next - dst_x1) / (float)dst_x1x2_dist;
+            if (horz_flipped)
+            {
+                progress_x_curr = 1.0F - progress_x_curr;
+                progress_x_next = 1.0F - progress_x_next;
+            }
+
+            float src_x_curr = ((src_x1 + ((src_x2 - src_x1) * progress_x_curr)) + 0.5F);
+            float src_x_next = ((src_x1 + ((src_x2 - src_x1) * progress_x_next)) + 0.5F);
+            int src_x_curr_int = (int)src_x_curr;
+            int src_x_next_int = (int)src_x_next;
+            if (src_x_curr_int < 0) src_x_curr_int = 0;
+            if (src_x_next_int < 0) src_x_next_int = 0;
+            if (src_x_curr_int >= src_x_max) src_x_curr_int = src_x_max;
+            if (src_x_next_int >= src_x_max) src_x_next_int = src_x_max;
+
+            bool x_linear_interpolation = (!horz_flipped) ? (src_x_curr_int + 1 >= src_x_next_int) : (src_x_curr_int - 1 <= src_x_next_int);
+            if (y_linear_interpolation)
+            {
+                if (!horz_flipped)
+                    src_x_next_int = src_x_curr_int + ((src_x_curr_int < src_x_max) ? 1 : 0);
+                else
+                    src_x_next_int = src_x_curr_int - ((src_x_curr_int > 0) ? 1 : 0);
+            }
+
+            float r;
+            float g;
+            float b;
+            float a;
+            
+            if (x_linear_interpolation)
+            {
+                float progress_x_single = 000000000000;
+                if (y_linear_interpolation)
+                {
+                    // x: linear
+                    // y: linear
+                    SWRenderColor *src_pix_xy1 = ptr_src_row_start;
+                    
+                    SWRenderColor *src_pix_x2  = ptr_src_row_start;
+                    if (src_x_curr_int != src_x_next_int)
+                        src_pix_x2 += (!horz_flipped) ? 1 : -1;
+
+                    SWRenderColor *src_pix_y2  = ptr_src_row_start;
+                    SWRenderColor *src_pix_xy2 = src_pix_x2;
+                    if (src_y_curr_int != src_y_next_int)
+                    {
+                        int offset = (!vert_flipped) ? linesize_src : -linesize_src;
+                        src_pix_y2  += offset;
+                        src_pix_xy2 += offset;
+                    }
+
+                    SWRenderColorF interpolation_color =
+                        SWRender_ColorInterpolation(
+                            SWRender_ColorToColorF(src_pix_xy1), SWRenderColorF dst, float progress)
+                }
+                else
+                {
+                    // x: linear
+                    // y: average
+                    
+                }
+            }
+            else
+            {
+                if (y_linear_interpolation)
+                {
+                    // x: average
+                    // y: linear
+                    
+                }
+                else
+                {
+                    // x: average
+                    // y: average
+                    
+                }
+            }
+
+            //SWRender_AlphaBlendRGBA8888(ptr_src_row_start[src_x_curr], ptr_dst_pixel);
+
+            ptr_dst_pixel++;
+        }
+
+        ptr_dst_row_start = (SWRenderColor *)((uint8_t *)ptr_dst_row_start + linesize_dst);
+    }
+#endif
 }
 
 #pragma endregion

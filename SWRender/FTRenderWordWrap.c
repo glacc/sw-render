@@ -26,21 +26,21 @@
 #include "FTEssentials.h"
 #include "FTRender.h"
 #include "SWRender.h"
-#include "FTEssentialsWordWrap.h"
+#include "FTWordWrap.h"
 
-bool FTRenderWordWrap_RenderStr(FTEssentials_State *state, FTEssentialsWordWrap_LineBuffer *line_buffer, SWRenderBuffer *buffer, FT_F26Dot6 x, FT_F26Dot6 y, FT_F26Dot6 max_width, const char *str, SWRenderColor color)
+bool FTRenderWordWrap_RenderStr(FTEssentials_State *state, FTWordWrapLineBuffer *line_buffer, SWRenderBuffer *buffer, FT_F26Dot6 x, FT_F26Dot6 y, FT_F26Dot6 max_width, const char *str, SWRenderColor color)
 {
     if (!(state && line_buffer && buffer))
         return false;
 
-    if (!FTEssentialsWordWrap_GetLinesWidthLimited(line_buffer, state, str, max_width, NULL, false))
+    if (!FTWordWrap_GetLinesWidthLimited(line_buffer, state, str, max_width, NULL, false))
         return false;
     
     FT_F26Dot6 cursor_y = y;
 
     for (int i = 0; i < line_buffer->count; i++)
     {
-        FTEssentialsWordWrap_Line *line = &line_buffer->lines[i];
+        FTWordWrapLine *line = &line_buffer->lines[i];
 
         FTRender_RenderStr(state, buffer, x, cursor_y, str + line->offset, line->bytes, color);
 
@@ -50,7 +50,7 @@ bool FTRenderWordWrap_RenderStr(FTEssentials_State *state, FTEssentialsWordWrap_
     return true;
 }
 
-bool FTRenderWordWrap_RenderStrWithAlign(FTEssentials_State *state, FTEssentialsWordWrap_LineBuffer *line_buffer, SWRenderBuffer *buffer, SWRenderRectF *rect, const char *str, int8_t horz_align, int8_t vert_align, SWRenderColor color)
+bool FTRenderWordWrap_RenderStrWithAlign(FTEssentials_State *state, FTWordWrapLineBuffer *line_buffer, SWRenderBuffer *buffer, SWRenderRectF *rect, const char *str, int8_t horz_align, int8_t vert_align, SWRenderColor color)
 {
     if (!(state && line_buffer && buffer))
         return false;
@@ -69,7 +69,7 @@ bool FTRenderWordWrap_RenderStrWithAlign(FTEssentials_State *state, FTEssentials
         bounds.y2 = bounds_int.y2;
     }
     
-    if (!FTEssentialsWordWrap_GetLinesWidthLimited(line_buffer, state, str, FLOAT_TO_F26DOT6(bounds.x2 - bounds.x1), NULL, false))
+    if (!FTWordWrap_GetLinesWidthLimited(line_buffer, state, str, FLOAT_TO_F26DOT6(bounds.x2 - bounds.x1), NULL, false))
         return false;
 
     size_t last_line_index = line_buffer->count - 1;
@@ -118,7 +118,7 @@ bool FTRenderWordWrap_RenderStrWithAlign(FTEssentials_State *state, FTEssentials
 
     while (line != line_end)
     {
-        FTEssentialsWordWrap_Line *text_line = &line_buffer->lines[line];
+        FTWordWrapLine *text_line = &line_buffer->lines[line];
 
         FT_F26Dot6 offset_x;
         if (horz_align < 0)

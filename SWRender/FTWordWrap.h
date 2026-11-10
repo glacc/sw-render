@@ -25,7 +25,7 @@
 
 #include "FTEssentials.h"
 
-typedef struct FTEssentialsWordWrap_LineStruct
+typedef struct FTWordWrapLineStruct
 {
     size_t offset;
     size_t bytes;
@@ -35,11 +35,11 @@ typedef struct FTEssentialsWordWrap_LineStruct
     FT_F26Dot6 bound_right;
     FT_F26Dot6 bound_bottom;
 }
-FTEssentialsWordWrap_Line;
+FTWordWrapLine;
 
-typedef struct FTEssentialsWordWrap_LineBufferStruct
+typedef struct FTWordWrapLineBuffer_Struct
 {
-    FTEssentialsWordWrap_Line *lines;
+    FTWordWrapLine *lines;
     size_t size;
     size_t count;
 
@@ -48,23 +48,23 @@ typedef struct FTEssentialsWordWrap_LineBufferStruct
     char *buf_brks;
     size_t buf_brks_size;
 }
-FTEssentialsWordWrap_LineBuffer;
+FTWordWrapLineBuffer;
 
 #ifdef __cplusplus
 extern "C"
 {
 #endif
 
-    extern size_t FTEssentialsWordWrap_LineBuffer_init_size;
-    extern size_t FTEssentialsWordWrap_LineBuffer_size_min_increment;
+    extern size_t FTWordWrapLineBuffer_init_size;
+    extern size_t FTWordWrapLineBuffer_size_min_increment;
 
-    extern bool FTEssentialsWordWrap_LineBufferInit(FTEssentialsWordWrap_LineBuffer *buffer);
-    extern void FTEssentialsWordWrap_LineBufferCleanup(FTEssentialsWordWrap_LineBuffer *buffer);
+    extern bool FTWordWrapLineBuffer_Init(FTWordWrapLineBuffer *buffer);
+    extern void FTWordWrapLineBuffer_Cleanup(FTWordWrapLineBuffer *buffer);
 
-    extern void FTEssentialsWordWrap_LineBufferClear(FTEssentialsWordWrap_LineBuffer *buffer);
+    extern void FTWordWrapLineBuffer_Clear(FTWordWrapLineBuffer *buffer);
 
-    extern bool FTEssentialsWordWrap_GetLinesWidthLimited(
-        FTEssentialsWordWrap_LineBuffer *buffer,
+    extern bool FTWordWrap_GetLinesWidthLimited(
+        FTWordWrapLineBuffer *buffer,
         FTEssentials_State *state,
         const char  *str,
         FT_F26Dot6  max_width,

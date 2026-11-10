@@ -18,7 +18,7 @@
     see <https://www.gnu.org/licenses/>. 
 */
 
-#include "FTEssentialsWordWrap.h"
+#include "FTWordWrap.h"
 
 #include <malloc.h>
 #include <stdbool.h>
@@ -27,28 +27,28 @@
 
 #include "FTEssentials.h"
 
-size_t FTEssentialsWordWrap_LineBuffer_init_size = 8;
-size_t FTEssentialsWordWrap_LineBuffer_size_min_increment = 8;
-static volatile bool FTEssentialsWordWrap_linebreak_inited = false;
+size_t FTWordWrapLineBuffer_init_size = 8;
+size_t FTWordWrapLineBuffer_size_min_increment = 8;
+static volatile bool FTWordWraplinebreak_inited = false;
 
-static inline bool FTEssentialsWordWrap_LineBufferCheck(FTEssentialsWordWrap_LineBuffer *buffer)
+static inline bool FTWordWrapLineBuffer_Check(FTWordWrapLineBuffer *buffer)
 {
     return (buffer && buffer->lines);
 }
 
-bool FTEssentialsWordWrap_LineBufferInit(FTEssentialsWordWrap_LineBuffer *buffer)
+bool FTWordWrapLineBuffer_Init(FTWordWrapLineBuffer *buffer)
 {
     if (!buffer)
         return false;
 
-    buffer->lines = malloc(FTEssentialsWordWrap_LineBuffer_init_size * sizeof(*buffer->lines));
+    buffer->lines = malloc(FTWordWrapLineBuffer_init_size * sizeof(*buffer->lines));
     if (!buffer->lines)
     {
         buffer->size  = 0;
         buffer->count = 0;
         return false;
     }
-    buffer->size  = FTEssentialsWordWrap_LineBuffer_init_size;
+    buffer->size  = FTWordWrapLineBuffer_init_size;
     buffer->count = 0;
 
     buffer->buf_brks = NULL;
@@ -57,7 +57,7 @@ bool FTEssentialsWordWrap_LineBufferInit(FTEssentialsWordWrap_LineBuffer *buffer
     return true;
 }
 
-void FTEssentialsWordWrap_LineBufferCleanup(FTEssentialsWordWrap_LineBuffer *buffer)
+void FTWordWrapLineBuffer_Cleanup(FTWordWrapLineBuffer *buffer)
 {
     if (!buffer)
         return;
@@ -78,15 +78,15 @@ void FTEssentialsWordWrap_LineBufferCleanup(FTEssentialsWordWrap_LineBuffer *buf
     buffer->buf_brks_size = 0;
 }
 
-void FTEssentialsWordWrap_LineBufferClear(FTEssentialsWordWrap_LineBuffer *buffer)
+void FTWordWrapLineBuffer_Clear(FTWordWrapLineBuffer *buffer)
 {
-    if (!FTEssentialsWordWrap_LineBufferCheck(buffer))
+    if (!FTWordWrapLineBuffer_Check(buffer))
         return;
 
     buffer->count = 0;
 }
 
-static char FTEssentialsWordWrap_GetTextBoundsInternal(
+static char FTWordWrapGetTextBoundsInternal(
     FTEssentials_State *state,
     const char  *str,
     const char  *brks,
@@ -224,8 +224,8 @@ static char FTEssentialsWordWrap_GetTextBoundsInternal(
     return brk;
 }
 
-static bool FTEssentialsWordWrap_AddLineInternal(
-    FTEssentialsWordWrap_LineBuffer *buffer,
+static bool FTWordWrapAddLineInternal(
+    FTWordWrapLineBuffer *buffer,
     size_t offset,
     size_t bytes,
     FT_F26Dot6 bound_left,
@@ -237,12 +237,12 @@ static bool FTEssentialsWordWrap_AddLineInternal(
     if (buffer->count == buffer->size)
     {
         size_t size_increment = buffer->size / 2;
-        if (size_increment < FTEssentialsWordWrap_LineBuffer_size_min_increment)
-            size_increment = FTEssentialsWordWrap_LineBuffer_size_min_increment;
+        if (size_increment < FTWordWrapLineBuffer_size_min_increment)
+            size_increment = FTWordWrapLineBuffer_size_min_increment;
 
         size_t new_size = buffer->size + size_increment;
 
-        FTEssentialsWordWrap_Line *lines_new = realloc(buffer->lines, sizeof(*lines_new) * new_size);
+        FTWordWrapLine *lines_new = realloc(buffer->lines, sizeof(*lines_new) * new_size);
 
         if (!lines_new)
             return false;
@@ -251,7 +251,7 @@ static bool FTEssentialsWordWrap_AddLineInternal(
         buffer->lines = lines_new;
     }
 
-    FTEssentialsWordWrap_Line *new_line = &buffer->lines[buffer->count];
+    FTWordWrapLine *new_line = &buffer->lines[buffer->count];
     new_line->offset = offset;
     new_line->bytes  = bytes;
     new_line->bound_left   = bound_left;
@@ -264,9 +264,9 @@ static bool FTEssentialsWordWrap_AddLineInternal(
     return true;
 }
 
-bool FTEssentialsWordWrap_GetLinesWidthLimited(FTEssentialsWordWrap_LineBuffer *buffer, FTEssentials_State *state, const char *str, FT_F26Dot6 max_width, const char *lang, bool fixed_advance)
+bool FTWordWrap_GetLinesWidthLimited(FTWordWrapLineBuffer *buffer, FTEssentials_State *state, const char *str, FT_F26Dot6 max_width, const char *lang, bool fixed_advance)
 {
-    if (!FTEssentialsWordWrap_LineBufferCheck(buffer))
+    if (!FTWordWrapLineBuffer_Check(buffer))
         return false;
 
     if (!str)
@@ -274,13 +274,13 @@ bool FTEssentialsWordWrap_GetLinesWidthLimited(FTEssentialsWordWrap_LineBuffer *
 
     /* preparation */
 
-    if (!FTEssentialsWordWrap_linebreak_inited)
+    if (!FTWordWraplinebreak_inited)
     {
         init_linebreak();
-        FTEssentialsWordWrap_linebreak_inited = true;
+        FTWordWraplinebreak_inited = true;
     }
 
-    FTEssentialsWordWrap_LineBufferClear(buffer);
+    FTWordWrapLineBuffer_Clear(buffer);
 
     size_t str_size = strlen(str);
     if (str_size == 0)
@@ -335,7 +335,7 @@ bool FTEssentialsWordWrap_GetLinesWidthLimited(FTEssentialsWordWrap_LineBuffer *
         FT_F26Dot6 max_x = 0;
         FT_F26Dot6 max_y = 0;
 
-        char brk_curr = FTEssentialsWordWrap_GetTextBoundsInternal(
+        char brk_curr = FTWordWrapGetTextBoundsInternal(
             state,
             ptr_str,
             brks,
@@ -420,7 +420,7 @@ bool FTEssentialsWordWrap_GetLinesWidthLimited(FTEssentialsWordWrap_LineBuffer *
 
         if (linebreak || str_ended)
         {
-            bool add_line_succeed = FTEssentialsWordWrap_AddLineInternal(
+            bool add_line_succeed = FTWordWrapAddLineInternal(
                 buffer,
                 line_start_offset,
                 (ptr_str - str) - line_start_offset,

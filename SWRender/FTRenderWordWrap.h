@@ -25,15 +25,15 @@
 #include "FTEssentials.h"
 #include "FTRender.h"
 #include "SWRender.h"
-#include "FTEssentialsWordWrap.h"
+#include "FTWordWrap.h"
 
 #ifdef __cplusplus
 extern "C"
 {
 #endif
 
-    extern bool FTRenderWordWrap_RenderStr(FTEssentials_State *state, FTEssentialsWordWrap_LineBuffer *line_buffer, SWRenderBuffer *buffer, FT_F26Dot6 x, FT_F26Dot6 y, FT_F26Dot6 max_width, const char *str, SWRenderColor color);
-    extern bool FTRenderWordWrap_RenderStrWithAlign(FTEssentials_State *state, FTEssentialsWordWrap_LineBuffer *line_buffer, SWRenderBuffer *buffer, SWRenderRectF *rect, const char *str, int8_t horz_align, int8_t vert_align, SWRenderColor color);
+    extern bool FTRenderWordWrap_RenderStr(FTEssentials_State *state, FTWordWrapLineBuffer *line_buffer, SWRenderBuffer *buffer, FT_F26Dot6 x, FT_F26Dot6 y, FT_F26Dot6 max_width, const char *str, SWRenderColor color);
+    extern bool FTRenderWordWrap_RenderStrWithAlign(FTEssentials_State *state, FTWordWrapLineBuffer *line_buffer, SWRenderBuffer *buffer, SWRenderRectF *rect, const char *str, int8_t horz_align, int8_t vert_align, SWRenderColor color);
 
 #ifdef __cplusplus
 }

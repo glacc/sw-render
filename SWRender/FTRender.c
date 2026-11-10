@@ -83,10 +83,10 @@ void FTRender_RenderGlyphToSurface(FT_Bitmap *bitmap, SWRenderBuffer *buffer, in
     else
         y_offset = 0;
 
-    if (x_end >= surface_w)
-        x_end = surface_w - 1;
-    if (y_end >= surface_h)
-        y_end = surface_h - 1;
+    if (x_end > surface_w)
+        x_end = surface_w;
+    if (y_end > surface_h)
+        y_end = surface_h;
 
     int bitmap_pitch = bitmap->pitch;
     uint8_t *ptr_bitmap_row_start = bitmap->buffer;

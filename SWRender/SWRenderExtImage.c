@@ -329,7 +329,7 @@ static int64_t AVIOCallbackSeekMem(void *opaque, int64_t offset, int whence)
 int SWRender_LoadImageFromFileToBuffer(const char *filepath, SWRenderBuffer *buffer)
 {
     AVFormatContext *fmt_ctx = NULL;
-    int ret;
+    int ret = 0;
 
     fmt_ctx = avformat_alloc_context();
     if (!fmt_ctx)
@@ -357,7 +357,7 @@ end:
 int SWRender_LoadImageFromMemoryToBuffer(const uint8_t *src, const size_t size, SWRenderBuffer *buffer)
 {
     AVFormatContext *fmt_ctx = NULL;
-    int ret;
+    int ret = 0;
 
     fmt_ctx = avformat_alloc_context();
     if (!fmt_ctx)
@@ -408,7 +408,7 @@ end:
 
 int SWRender_SaveImageFromBuffer(SWRenderBuffer *buffer, const char *filepath, enum AVCodecID codec_id)
 {
-    int ret;
+    int ret = 0;
 
     FILE *file = fopen(filepath, "wb");
     if (!file)
@@ -496,4 +496,35 @@ end:
     fclose(file);
 
     return ret;
+}
+
+bool SWRender_DupSWScaledToBuffer(const SWRenderBuffer *src, SWRenderBuffer *dst)
+{
+    if (!SWRender_CheckBuffer(src))
+        return false;
+
+    SWRenderBuffer new_buffer = { dst->w, dst->h, NULL, dst->linesize };
+    if (!SWRender_BufferAlloc(&new_buffer))
+        return false;
+
+    struct SwsContext *sws_ctx = sws_getContext(src->w, src->h, SWRENDER_EXTIMAGE_AVPIXFMT, new_buffer.w, new_buffer.h, SWRENDER_EXTIMAGE_AVPIXFMT, SWS_LANCZOS, NULL, NULL, NULL);
+    if (!sws_ctx)
+    {
+        SWRender_BufferFree(&new_buffer);
+        return false;
+    }
+
+    const uint8_t *src_data[8] = { (uint8_t *)src->data, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
+    uint8_t *dst_data[8] = { (uint8_t *)new_buffer.data, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
+    int src_linesize[8] = { src->linesize, 0, 0, 0, 0, 0, 0, 0 };
+    int dst_linesize[8] = { new_buffer.linesize, 0, 0, 0, 0, 0, 0, 0 };
+                    
+    sws_scale(sws_ctx, src_data, src_linesize, 0, src->h, dst_data, dst_linesize);
+
+    sws_freeContext(sws_ctx);
+    
+    SWRender_BufferFree(dst);
+    *dst = new_buffer;
+
+    return true;
 }
