@@ -247,6 +247,84 @@ bool SWRender_BoundToRectFloat(SWRenderRectF *rect, const SWRenderBoundF *bounds
     return true;
 }
 
+bool SWRender_BoundIntToFloat(SWRenderBoundF *bound_float, const SWRenderBoundI *bound_int)
+{
+    if (!(bound_float && bound_int))
+        return false;
+
+    bound_float->x1 = bound_int->x1;
+    bound_float->y1 = bound_int->y1;
+    bound_float->x2 = bound_int->x2 + 1;
+    bound_float->y2 = bound_int->y2 + 1;
+
+    return true;
+}
+
+bool SWRender_BoundFloatToInt(SWRenderBoundI *bound_int, const SWRenderBoundF *bound_float)
+{
+    if (!(bound_int && bound_float))
+        return false;
+
+    bound_int->x1 = bound_float->x1;
+    bound_int->y1 = bound_float->y1;
+    bound_int->x2 = bound_float->x2 - 1.0F;
+    bound_int->y2 = bound_float->y2 - 1.0F;
+
+    return true;
+}
+
+bool SWRender_BoundIntToFloatNoAddition(SWRenderBoundF *bound_float, const SWRenderBoundI *bound_int)
+{
+    if (!(bound_float && bound_int))
+        return false;
+
+    bound_float->x1 = bound_int->x1;
+    bound_float->y1 = bound_int->y1;
+    bound_float->x2 = bound_int->x2;
+    bound_float->y2 = bound_int->y2;
+
+    return true;
+}
+
+bool SWRender_BoundFloatToIntNoSubtraction(SWRenderBoundI *bound_int, const SWRenderBoundF *bound_float)
+{
+    if (!(bound_int && bound_float))
+        return false;
+
+    bound_int->x1 = bound_float->x1;
+    bound_int->y1 = bound_float->y1;
+    bound_int->x2 = bound_float->x2;
+    bound_int->y2 = bound_float->y2;
+
+    return true;
+}
+
+bool SWRender_RectIntToFloat(SWRenderRectF *rect_float, const SWRenderRectI *rect_int)
+{
+    if (!(rect_float && rect_int))
+        return false;
+
+    rect_float->x = rect_int->x;
+    rect_float->y = rect_int->y;
+    rect_float->w = rect_int->w;
+    rect_float->h = rect_int->h;
+
+    return true;
+}
+
+bool SWRender_RectFloatToInt(SWRenderRectI *rect_int, const SWRenderRectF *rect_float)
+{
+    if (!(rect_int && rect_float))
+        return false;
+
+    rect_int->x = rect_float->x;
+    rect_int->y = rect_float->y;
+    rect_int->w = rect_float->w;
+    rect_int->h = rect_float->h;
+
+    return true;
+}
+
 #pragma endregion
 
 #pragma region BoundIntersection

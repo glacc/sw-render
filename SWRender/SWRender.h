@@ -126,6 +126,13 @@ extern "C"
     extern void SWRender_IncludeBoundToBoundInt(SWRenderBoundI *dst, const SWRenderBoundI *bounds);
     extern void SWRender_IncludeBoundToBoundFloat(SWRenderBoundF *dst, const SWRenderBoundF *bounds);
 
+    extern bool SWRender_BoundIntToFloat(SWRenderBoundF *bound_float, const SWRenderBoundI *bound_int);
+    extern bool SWRender_BoundFloatToInt(SWRenderBoundI *bound_int, const SWRenderBoundF *bound_float);
+    extern bool SWRender_BoundIntToFloatNoAddition(SWRenderBoundF *bound_float, const SWRenderBoundI *bound_int);
+    extern bool SWRender_BoundFloatToIntNoSubtraction(SWRenderBoundI *bound_int, const SWRenderBoundF *bound_float);
+    extern bool SWRender_RectIntToFloat(SWRenderRectF *rect_float, const SWRenderRectI *rect_int);
+    extern bool SWRender_RectFloatToInt(SWRenderRectI *rect_int, const SWRenderRectF *rect_float);
+
     // rect <-> bounds
     extern bool SWRender_RectToBoundInt(SWRenderBoundI *bounds, const SWRenderRectI *rect);
     extern bool SWRender_RectToBoundFloat(SWRenderBoundF *bounds, const SWRenderRectF *rect);
